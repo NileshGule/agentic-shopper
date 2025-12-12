@@ -97,15 +97,15 @@
 - [X] T053 [US1] Implement receipt status tracking (Pending/Processing/NeedsReview/Verified) in workflow
 - [X] T054 [US1] Add validation for receipt image formats (JPEG, PNG, PDF) and size (<10MB) in controller
 - [X] T055 [US1] Implement confidence score calculation for OCR results (integrated in OCR services)
-- [ ] T056 [P] [US1] Create ReceiptUpload component in frontend/src/components/receipts/ReceiptUpload.tsx
-- [ ] T057 [P] [US1] Create ReceiptReview component with edit capabilities in frontend/src/components/receipts/ReceiptReview.tsx
-- [ ] T058 [P] [US1] Create ReceiptList component in frontend/src/components/receipts/ReceiptList.tsx
-- [ ] T059 [US1] Implement receipt API client in frontend/src/services/api/receiptApi.ts
-- [ ] T060 [US1] Create ReceiptsPage with upload and review workflow in frontend/src/pages/ReceiptsPage.tsx
-- [ ] T061 [US1] Add receipt image preview functionality in ReceiptReview component
-- [ ] T062 [US1] Implement manual correction UI for product names, prices, quantities in ReceiptReview
-- [ ] T063 [US1] Add error handling for blurry/low-confidence receipts (FR-003)
-- [ ] T064 [US1] Implement receipt re-upload functionality for failed OCR
+- [X] T056 [P] [US1] Create ReceiptUpload component in frontend/src/components/receipts/ReceiptUpload.tsx
+- [X] T057 [P] [US1] Create ReceiptReview component with edit capabilities in frontend/src/components/receipts/ReceiptReview.tsx
+- [X] T058 [P] [US1] Create ReceiptList component in frontend/src/components/receipts/ReceiptList.tsx
+- [X] T059 [US1] Implement receipt API client in frontend/src/services/api/receiptApi.ts
+- [X] T060 [US1] Create ReceiptsPage with upload and review workflow in frontend/src/pages/ReceiptsPage.tsx
+- [X] T061 [US1] Add receipt image preview functionality in ReceiptReview component
+- [X] T062 [US1] Implement manual correction UI for product names, prices, quantities in ReceiptReview
+- [X] T063 [US1] Add error handling for blurry/low-confidence receipts (FR-003)
+- [X] T064 [US1] Implement receipt re-upload functionality for failed OCR
 
 **Checkpoint**: User Story 1 complete - Receipt upload and OCR extraction working end-to-end
 
