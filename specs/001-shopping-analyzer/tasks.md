@@ -89,7 +89,7 @@
 - [X] T045 [P] [US1] Create IOcrService interface in backend/src/AgenticShopper.Agents.Receipt/Interfaces/IOcrService.cs
 - [X] T046 [US1] Implement AzureDocumentIntelligenceOcrService in backend/src/AgenticShopper.Agents.Receipt/Services/AzureDocumentIntelligenceOcrService.cs
 - [X] T047 [P] [US1] Implement PaddleOcrService for local dev in backend/src/AgenticShopper.Agents.Receipt/Services/PaddleOcrService.cs
-- [ ] T048 [US1] Implement ReceiptAgent with OCR workflow in backend/src/AgenticShopper.Agents.Receipt/ReceiptAgent.cs
+- [X] T048 [US1] Implement ReceiptAgent with OCR workflow in backend/src/AgenticShopper.Agents.Receipt/ReceiptAgent.cs
 - [ ] T049 [US1] Create ReceiptProcessingController with upload endpoint in backend/src/AgenticShopper.Agents.Receipt/Controllers/ReceiptController.cs
 - [ ] T050 [US1] Implement receipt image upload to Azure Blob Storage in backend/src/AgenticShopper.Agents.Receipt/Services/ImageStorageService.cs
 - [ ] T051 [US1] Implement ReceiptParser to map OCR results to Receipt entity in backend/src/AgenticShopper.Agents.Receipt/Services/ReceiptParser.cs
