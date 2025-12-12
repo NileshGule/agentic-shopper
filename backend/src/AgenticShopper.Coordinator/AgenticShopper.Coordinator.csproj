@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AgenticShopper.Agents.Receipt\AgenticShopper.Agents.Receipt.csproj" />
     <ProjectReference Include="..\AgenticShopper.Core\AgenticShopper.Core.csproj" />
     <ProjectReference Include="..\AgenticShopper.Data\AgenticShopper.Data.csproj" />
   </ItemGroup>

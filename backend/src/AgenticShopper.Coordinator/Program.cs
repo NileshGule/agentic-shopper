@@ -1,5 +1,9 @@
+using AgenticShopper.Agents.Receipt;
+using AgenticShopper.Agents.Receipt.Interfaces;
+using AgenticShopper.Agents.Receipt.Services;
 using AgenticShopper.Coordinator.Hubs;
 using AgenticShopper.Coordinator.Middleware;
+using AgenticShopper.Core.Abstractions;
 using AgenticShopper.Core.Interfaces;
 using AgenticShopper.Core.Models;
 using AgenticShopper.Core.Services;
@@ -41,6 +45,13 @@ try
 
     // Register services
     builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
+    builder.Services.AddScoped<IOcrService, CompositeOcrService>();
+    
+    // TODO: Register LLM provider when needed
+    // builder.Services.AddScoped<ILlmProvider>(sp => LlmProviderFactory.Create(...));
+
+    // Register agents
+    builder.Services.AddScoped<ReceiptAgent>();
 
     // Configure CORS
     builder.Services.AddCors(options =>

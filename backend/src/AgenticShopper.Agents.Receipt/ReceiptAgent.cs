@@ -24,11 +24,11 @@ public class ReceiptAgent : AgentBase
 
     public ReceiptAgent(
         ILogger<ReceiptAgent> logger,
-        ILlmProvider llmProvider,
         IOcrService ocrService,
         IBlobStorageService blobStorageService,
         IRepository<Core.Models.Receipt> receiptRepository,
-        IRepository<Product> productRepository)
+        IRepository<Product> productRepository,
+        ILlmProvider? llmProvider = null)
         : base(logger, llmProvider)
     {
         _ocrService = ocrService ?? throw new ArgumentNullException(nameof(ocrService));

@@ -10,12 +10,12 @@ namespace AgenticShopper.Core.Abstractions;
 public abstract class AgentBase
 {
     protected readonly ILogger Logger;
-    protected readonly ILlmProvider LlmProvider;
+    protected readonly ILlmProvider? LlmProvider;
 
-    protected AgentBase(ILogger logger, ILlmProvider llmProvider)
+    protected AgentBase(ILogger logger, ILlmProvider? llmProvider = null)
     {
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        LlmProvider = llmProvider ?? throw new ArgumentNullException(nameof(llmProvider));
+        LlmProvider = llmProvider;
     }
 
     /// <summary>
