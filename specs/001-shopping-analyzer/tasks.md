@@ -57,16 +57,16 @@
 - [X] T026 [P] Setup environment configuration management (appsettings.json) in all agent projects
 - [X] T027 Create base repository interface IRepository<T> in backend/src/AgenticShopper.Core/Interfaces/IRepository.cs
 - [X] T028 [P] Setup SignalR hub infrastructure in backend/src/AgenticShopper.Coordinator/Hubs/ShoppingListHub.cs
-- [ ] T029 [P] Configure Azure Blob Storage client in backend/src/AgenticShopper.Core/Services/BlobStorageService.cs
+- [X] T029 [P] Configure Azure Blob Storage client in backend/src/AgenticShopper.Core/Services/BlobStorageService.cs
 - [X] T030 [P] Setup Redis caching configuration in backend/src/AgenticShopper.Coordinator/Program.cs
 - [ ] T031 [P] Create Dockerfile.coordinator in backend/deployment/docker/Dockerfile.coordinator
 - [ ] T032 [P] Create Dockerfile.agent for agent services in backend/deployment/docker/Dockerfile.agent
 - [X] T033 [P] Setup API routing structure in backend/src/AgenticShopper.Coordinator/Controllers/
 - [X] T034 [P] Configure Swagger/OpenAPI documentation in backend/src/AgenticShopper.Coordinator/Program.cs
-- [ ] T035 Create React app structure with routing (React Router) in frontend/src/
+- [X] T035 Create React app structure with routing (React Router) in frontend/src/
 - [X] T036 [P] Setup Axios HTTP client configuration in frontend/src/services/api/client.ts
 - [X] T037 [P] Setup SignalR client connection in frontend/src/services/websocket/realtimeSync.ts
-- [ ] T038 [P] Create common UI components (Button, Input, Modal) in frontend/src/components/common/
+- [X] T038 [P] Create common UI components (Button, Input, Modal) in frontend/src/components/common/
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 

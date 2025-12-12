@@ -1,5 +1,6 @@
 using AgenticShopper.Coordinator.Hubs;
 using AgenticShopper.Coordinator.Middleware;
+using AgenticShopper.Core.Services;
 using AgenticShopper.Data;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -30,6 +31,9 @@ try
 
     // Add controllers
     builder.Services.AddControllers();
+
+    // Register services
+    builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 
     // Configure CORS
     builder.Services.AddCors(options =>
