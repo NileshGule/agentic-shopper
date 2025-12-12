@@ -1,0 +1,6 @@
+@AgenticShopper.Agents.PriceComparison_HostAddress = http://localhost:5252
+
+GET {{AgenticShopper.Agents.PriceComparison_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

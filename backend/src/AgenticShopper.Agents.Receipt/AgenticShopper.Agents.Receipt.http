@@ -1,0 +1,6 @@
+@AgenticShopper.Agents.Receipt_HostAddress = http://localhost:5244
+
+GET {{AgenticShopper.Agents.Receipt_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

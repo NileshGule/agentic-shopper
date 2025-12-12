@@ -1,0 +1,6 @@
+@AgenticShopper.Agents.ListGenerator_HostAddress = http://localhost:5058
+
+GET {{AgenticShopper.Agents.ListGenerator_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
