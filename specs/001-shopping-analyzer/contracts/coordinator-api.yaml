@@ -1,0 +1,523 @@
+openapi: 3.0.3
+info:
+  title: Coordinator Agent API
+  description: |
+    Orchestrates multi-agent workflows for receipt processing, shopping list generation,
+    and budget management. Entry point for frontend applications.
+  version: 1.0.0
+  contact:
+    name: Agentic Shopper Team
+
+servers:
+  - url: https://api.agenticshopper.com/v1
+    description: Production
+  - url: https://staging-api.agenticshopper.com/v1
+    description: Staging
+  - url: http://localhost:5000/v1
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /coordinator/receipts/process:
+    post:
+      summary: Process receipt upload (full workflow)
+      description: |
+        Orchestrates complete receipt processing workflow:
+        1. Upload image to blob storage
+        2. Trigger OCR extraction (Receipt Agent)
+        3. Auto-categorize products (Categorization Agent)
+        4. Calculate/update frequencies (Frequency Agent)
+        5. Return structured receipt data
+      operationId: processReceipt
+      tags:
+        - Receipts
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - familyId
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Receipt image (JPEG, PNG, or PDF, max 10MB)
+                familyId:
+                  type: string
+                  format: uuid
+                  description: Family account ID
+                uploadedBy:
+                  type: string
+                  format: uuid
+                  description: User profile ID who uploaded the receipt
+      responses:
+        '202':
+          description: Receipt processing accepted (async workflow started)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  receiptId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [Pending, Processing]
+                  workflowId:
+                    type: string
+                    format: uuid
+                  estimatedCompletionTime:
+                    type: string
+                    format: date-time
+              example:
+                receiptId: "550e8400-e29b-41d4-a716-446655440000"
+                status: "Processing"
+                workflowId: "660f9511-f3ac-52e5-b827-557766551111"
+                estimatedCompletionTime: "2025-12-13T14:30:05Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: File too large (exceeds 10MB)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /coordinator/receipts/{receiptId}/status:
+    get:
+      summary: Get receipt processing status
+      description: Check status of async receipt processing workflow
+      operationId: getReceiptStatus
+      tags:
+        - Receipts
+      parameters:
+        - name: receiptId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Receipt processing status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  receiptId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [Pending, Processing, NeedsReview, Verified, Failed]
+                  currentStep:
+                    type: string
+                    enum: [OCR, Categorization, Frequency, Complete]
+                  progress:
+                    type: number
+                    format: float
+                    minimum: 0
+                    maximum: 100
+                  result:
+                    $ref: '#/components/schemas/ReceiptProcessingResult'
+                  error:
+                    $ref: '#/components/schemas/Error'
+              example:
+                receiptId: "550e8400-e29b-41d4-a716-446655440000"
+                status: "Verified"
+                currentStep: "Complete"
+                progress: 100
+                result:
+                  storeName: "Coles"
+                  purchaseDate: "2025-12-12"
+                  totalAmount: 124.50
+                  confidenceScore: 0.95
+                  itemsCount: 12
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /coordinator/shopping-lists/generate:
+    post:
+      summary: Generate shopping list (full workflow)
+      description: |
+        Orchestrates shopping list generation:
+        1. Analyze purchase history (Frequency Agent)
+        2. Identify due/overdue products
+        3. Fetch current promotions (Price Agent)
+        4. Calculate price comparisons across stores
+        5. Create optimized shopping list
+      operationId: generateShoppingList
+      tags:
+        - Shopping Lists
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - familyId
+              properties:
+                familyId:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                  maxLength: 100
+                  description: Optional list name (default: "Shopping List {date}")
+                createdBy:
+                  type: string
+                  format: uuid
+                includePromotions:
+                  type: boolean
+                  default: true
+                  description: Include promotion price comparisons
+                urgencyFilter:
+                  type: array
+                  items:
+                    type: string
+                    enum: [Overdue, DueThisWeek, Upcoming]
+                  description: Filter by urgency levels (default: all)
+      responses:
+        '201':
+          description: Shopping list generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Family account not found or no purchase history
+
+  /coordinator/shopping-lists/{listId}/optimize:
+    post:
+      summary: Optimize shopping list for savings
+      description: |
+        Analyze shopping list items across stores and suggest optimal 
+        shopping strategy for maximum savings
+      operationId: optimizeShoppingList
+      tags:
+        - Shopping Lists
+      parameters:
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Optimization recommendations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingOptimization'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /coordinator/budgets/{budgetId}/analyze:
+    get:
+      summary: Analyze budget performance
+      description: |
+        Get spending analytics for a budget period:
+        1. Calculate current spending vs budget
+        2. Identify spending trends
+        3. Predict end-of-period spending
+        4. Suggest cost-saving opportunities
+      operationId: analyzeBudget
+      tags:
+        - Budgets
+      parameters:
+        - name: budgetId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Budget analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetAnalysis'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ReceiptProcessingResult:
+      type: object
+      properties:
+        storeName:
+          type: string
+        purchaseDate:
+          type: string
+          format: date
+        totalAmount:
+          type: number
+          format: decimal
+        confidenceScore:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        itemsCount:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptItem'
+
+    ReceiptItem:
+      type: object
+      properties:
+        productName:
+          type: string
+        quantity:
+          type: number
+        unitPrice:
+          type: number
+          format: decimal
+        totalPrice:
+          type: number
+          format: decimal
+        category:
+          type: string
+        categoryConfidence:
+          type: number
+          format: float
+        frequency:
+          type: string
+          enum: [Unknown, Weekly, Fortnightly, Monthly, Quarterly, Annually, Occasional]
+
+    ShoppingList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        familyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdBy:
+          type: string
+          format: uuid
+        createdDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [Active, InProgress, Completed, Archived]
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShoppingListItem'
+        totalEstimatedCost:
+          type: number
+          format: decimal
+        potentialSavings:
+          type: number
+          format: decimal
+
+    ShoppingListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        quantity:
+          type: number
+        urgency:
+          type: string
+          enum: [Upcoming, DueThisWeek, Overdue]
+        source:
+          type: string
+          enum: [AutoGenerated, Manual]
+        prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductPrice'
+
+    ProductPrice:
+      type: object
+      properties:
+        storeName:
+          type: string
+        price:
+          type: number
+          format: decimal
+        isOnPromotion:
+          type: boolean
+        originalPrice:
+          type: number
+          format: decimal
+        discountPercentage:
+          type: number
+          format: float
+        promotionEndDate:
+          type: string
+          format: date
+
+    ShoppingOptimization:
+      type: object
+      properties:
+        listId:
+          type: string
+          format: uuid
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/OptimizationRecommendation'
+        totalSavings:
+          type: number
+          format: decimal
+        comparisonSummary:
+          type: object
+          properties:
+            colesTotal:
+              type: number
+            woolworthsTotal:
+              type: number
+            optimizedTotal:
+              type: number
+            savingsAmount:
+              type: number
+            savingsPercentage:
+              type: number
+
+    OptimizationRecommendation:
+      type: object
+      properties:
+        strategy:
+          type: string
+          description: E.g., "Buy dairy at Woolworths, produce at Coles"
+        itemsAtColes:
+          type: array
+          items:
+            type: string
+        itemsAtWoolworths:
+          type: array
+          items:
+            type: string
+        savings:
+          type: number
+          format: decimal
+
+    BudgetAnalysis:
+      type: object
+      properties:
+        budgetId:
+          type: string
+          format: uuid
+        categoryName:
+          type: string
+        period:
+          type: string
+          enum: [Weekly, Monthly]
+        budgetAmount:
+          type: number
+          format: decimal
+        currentSpent:
+          type: number
+          format: decimal
+        remainingBudget:
+          type: number
+          format: decimal
+        percentageUsed:
+          type: number
+          format: float
+        trend:
+          type: string
+          enum: [OnTrack, OverBudget, UnderBudget]
+        projectedEndOfPeriodSpending:
+          type: number
+          format: decimal
+        alerts:
+          type: array
+          items:
+            type: string
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - INVALID_REQUEST
+            - UNAUTHORIZED
+            - FORBIDDEN
+            - NOT_FOUND
+            - CONFLICT
+            - INTERNAL_ERROR
+            - SERVICE_UNAVAILABLE
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "INVALID_REQUEST"
+            message: "Missing required field: familyId"
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "UNAUTHORIZED"
+            message: "Invalid or expired token"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "NOT_FOUND"
+            message: "Receipt not found"
+
+tags:
+  - name: Receipts
+    description: Receipt processing workflows
+  - name: Shopping Lists
+    description: Shopping list generation and optimization
+  - name: Budgets
+    description: Budget analysis and tracking
