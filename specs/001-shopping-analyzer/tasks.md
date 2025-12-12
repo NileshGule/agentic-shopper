@@ -22,10 +22,10 @@
 
 - [X] T001 Create backend solution structure with 9 projects (Coordinator, 6 agents, Core, Data) in backend/src/
 - [X] T002 Initialize .NET 10 solution file and configure project references in backend/
-- [ ] T003 [P] Create frontend React 18 + TypeScript project with Vite in frontend/
-- [ ] T004 [P] Configure ESLint, Prettier, and EditorConfig for code quality
+- [X] T003 [P] Create frontend React 18 + TypeScript project with Vite in frontend/
+- [X] T004 [P] Configure ESLint, Prettier, and EditorConfig for code quality
 - [ ] T005 [P] Setup Docker Compose configuration in backend/deployment/docker/docker-compose.yml
-- [ ] T006 [P] Create .gitignore for .NET, React, and Docker artifacts
+- [X] T006 [P] Create .gitignore for .NET, React, and Docker artifacts
 - [ ] T007 Create repository structure per plan.md (backend/, frontend/, .github/, specs/)
 
 ---
@@ -36,36 +36,36 @@
 
 **⚠️ CRITICAL**: No user story work can begin until Phase 2 is complete
 
-- [ ] T008 Setup PostgreSQL database schema in backend/src/AgenticShopper.Data/ApplicationDbContext.cs
-- [ ] T009 Create initial EF Core migration for all 11 tables in backend/src/AgenticShopper.Data/Migrations/
-- [ ] T010 [P] Implement FamilyAccount entity in backend/src/AgenticShopper.Core/Models/FamilyAccount.cs
-- [ ] T011 [P] Implement UserProfile entity in backend/src/AgenticShopper.Core/Models/UserProfile.cs
-- [ ] T012 [P] Implement Store entity in backend/src/AgenticShopper.Core/Models/Store.cs
-- [ ] T013 [P] Implement Category entity in backend/src/AgenticShopper.Core/Models/Category.cs
-- [ ] T014 Seed predefined categories (11 categories) and stores (Coles, Woolworths) in migration
-- [ ] T015 Configure EF Core relationships and indexes in backend/src/AgenticShopper.Data/ApplicationDbContext.cs
-- [ ] T016 [P] Implement ILlmProvider abstraction in backend/src/AgenticShopper.Core/Interfaces/ILlmProvider.cs
-- [ ] T017 [P] Implement FoundryLocalProvider in backend/src/AgenticShopper.Core/Abstractions/FoundryLocalProvider.cs
-- [ ] T018 [P] Implement AzureAIFoundryProvider in backend/src/AgenticShopper.Core/Abstractions/AzureAIFoundryProvider.cs
-- [ ] T019 Implement LLM provider factory with configuration-based selection in backend/src/AgenticShopper.Core/Abstractions/LlmProviderFactory.cs
+- [X] T008 Setup PostgreSQL database schema in backend/src/AgenticShopper.Data/ApplicationDbContext.cs
+- [X] T009 Create initial EF Core migration for all 11 tables in backend/src/AgenticShopper.Data/Migrations/
+- [X] T010 [P] Implement FamilyAccount entity in backend/src/AgenticShopper.Core/Models/FamilyAccount.cs
+- [X] T011 [P] Implement UserProfile entity in backend/src/AgenticShopper.Core/Models/UserProfile.cs
+- [X] T012 [P] Implement Store entity in backend/src/AgenticShopper.Core/Models/Store.cs
+- [X] T013 [P] Implement Category entity in backend/src/AgenticShopper.Core/Models/Category.cs
+- [X] T014 Seed predefined categories (11 categories) and stores (Coles, Woolworths) in migration
+- [X] T015 Configure EF Core relationships and indexes in backend/src/AgenticShopper.Data/ApplicationDbContext.cs
+- [X] T016 [P] Implement ILlmProvider abstraction in backend/src/AgenticShopper.Core/Interfaces/ILlmProvider.cs
+- [X] T017 [P] Implement FoundryLocalProvider in backend/src/AgenticShopper.Core/Abstractions/FoundryLocalProvider.cs
+- [X] T018 [P] Implement AzureAIFoundryProvider in backend/src/AgenticShopper.Core/Abstractions/AzureAIFoundryProvider.cs
+- [X] T019 Implement LLM provider factory with configuration-based selection in backend/src/AgenticShopper.Core/Abstractions/LlmProviderFactory.cs
 - [ ] T020 [P] Configure Microsoft Agent Framework runtime in backend/src/AgenticShopper.Coordinator/Program.cs
 - [ ] T021 [P] Implement AgentBase abstract class in backend/src/AgenticShopper.Core/Abstractions/AgentBase.cs
 - [ ] T022 [P] Setup JWT authentication middleware in backend/src/AgenticShopper.Coordinator/Middleware/
-- [ ] T023 [P] Configure CORS for React frontend in backend/src/AgenticShopper.Coordinator/Program.cs
-- [ ] T024 [P] Setup error handling middleware in backend/src/AgenticShopper.Coordinator/Middleware/ErrorHandlingMiddleware.cs
-- [ ] T025 [P] Configure structured logging with Serilog in backend/src/AgenticShopper.Coordinator/Program.cs
-- [ ] T026 [P] Setup environment configuration management (appsettings.json) in all agent projects
-- [ ] T027 Create base repository interface IRepository<T> in backend/src/AgenticShopper.Core/Interfaces/IRepository.cs
-- [ ] T028 [P] Setup SignalR hub infrastructure in backend/src/AgenticShopper.Coordinator/Hubs/ShoppingListHub.cs
+- [X] T023 [P] Configure CORS for React frontend in backend/src/AgenticShopper.Coordinator/Program.cs
+- [X] T024 [P] Setup error handling middleware in backend/src/AgenticShopper.Coordinator/Middleware/ErrorHandlingMiddleware.cs
+- [X] T025 [P] Configure structured logging with Serilog in backend/src/AgenticShopper.Coordinator/Program.cs
+- [X] T026 [P] Setup environment configuration management (appsettings.json) in all agent projects
+- [X] T027 Create base repository interface IRepository<T> in backend/src/AgenticShopper.Core/Interfaces/IRepository.cs
+- [X] T028 [P] Setup SignalR hub infrastructure in backend/src/AgenticShopper.Coordinator/Hubs/ShoppingListHub.cs
 - [ ] T029 [P] Configure Azure Blob Storage client in backend/src/AgenticShopper.Core/Services/BlobStorageService.cs
-- [ ] T030 [P] Setup Redis caching configuration in backend/src/AgenticShopper.Coordinator/Program.cs
+- [X] T030 [P] Setup Redis caching configuration in backend/src/AgenticShopper.Coordinator/Program.cs
 - [ ] T031 [P] Create Dockerfile.coordinator in backend/deployment/docker/Dockerfile.coordinator
 - [ ] T032 [P] Create Dockerfile.agent for agent services in backend/deployment/docker/Dockerfile.agent
-- [ ] T033 [P] Setup API routing structure in backend/src/AgenticShopper.Coordinator/Controllers/
-- [ ] T034 [P] Configure Swagger/OpenAPI documentation in backend/src/AgenticShopper.Coordinator/Program.cs
+- [X] T033 [P] Setup API routing structure in backend/src/AgenticShopper.Coordinator/Controllers/
+- [X] T034 [P] Configure Swagger/OpenAPI documentation in backend/src/AgenticShopper.Coordinator/Program.cs
 - [ ] T035 Create React app structure with routing (React Router) in frontend/src/
-- [ ] T036 [P] Setup Axios HTTP client configuration in frontend/src/services/api/client.ts
-- [ ] T037 [P] Setup SignalR client connection in frontend/src/services/websocket/realtimeSync.ts
+- [X] T036 [P] Setup Axios HTTP client configuration in frontend/src/services/api/client.ts
+- [X] T037 [P] Setup SignalR client connection in frontend/src/services/websocket/realtimeSync.ts
 - [ ] T038 [P] Create common UI components (Button, Input, Modal) in frontend/src/components/common/
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
