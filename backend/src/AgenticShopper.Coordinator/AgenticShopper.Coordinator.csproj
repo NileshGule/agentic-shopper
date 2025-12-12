@@ -22,6 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AgenticShopper.Agents.Categorization\AgenticShopper.Agents.Categorization.csproj" />
+    <ProjectReference Include="..\AgenticShopper.Agents.Frequency\AgenticShopper.Agents.Frequency.csproj" />
     <ProjectReference Include="..\AgenticShopper.Agents.Receipt\AgenticShopper.Agents.Receipt.csproj" />
     <ProjectReference Include="..\AgenticShopper.Core\AgenticShopper.Core.csproj" />
     <ProjectReference Include="..\AgenticShopper.Data\AgenticShopper.Data.csproj" />

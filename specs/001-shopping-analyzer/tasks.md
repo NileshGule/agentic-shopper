@@ -122,12 +122,12 @@
 - [X] T065 [P] [US2] Implement CategorizationAgent with LLM prompts in backend/src/AgenticShopper.Agents.Categorization/CategorizationAgent.cs
 - [X] T066 [P] [US2] Create CategoryClassifier service in backend/src/AgenticShopper.Agents.Categorization/Services/CategoryClassifier.cs
 - [X] T067 [US2] Implement LLM prompt templates for category suggestion in backend/src/AgenticShopper.Agents.Categorization/Prompts/CategorizationPrompts.cs
-- [ ] T068 [US2] Create CategorizationController with suggest/assign endpoints in backend/src/AgenticShopper.Agents.Categorization/Controllers/CategorizationController.cs
+- [X] T068 [US2] Create CategorizationController with suggest/assign endpoints in backend/src/AgenticShopper.Agents.Categorization/Controllers/CategorizationController.cs
 - [X] T069 [US2] Implement category preference storage (FR-009) in ProductRepository
-- [ ] T070 [P] [US2] Implement FrequencyAgent in backend/src/AgenticShopper.Agents.Frequency/FrequencyAgent.cs
-- [ ] T071 [US2] Implement FrequencyCalculator algorithm (minimum 3 purchases) in backend/src/AgenticShopper.Agents.Frequency/Services/FrequencyCalculator.cs
-- [ ] T072 [US2] Create FrequencyController with calculate/override endpoints in backend/src/AgenticShopper.Agents.Frequency/Controllers/FrequencyController.cs
-- [ ] T073 [US2] Implement frequency pause functionality (FR-015) in FrequencyAgent
+- [X] T070 [P] [US2] Implement FrequencyAgent in backend/src/AgenticShopper.Agents.Frequency/FrequencyAgent.cs
+- [X] T071 [US2] Implement FrequencyCalculator algorithm (minimum 3 purchases) in backend/src/AgenticShopper.Agents.Frequency/Services/FrequencyCalculator.cs
+- [X] T072 [US2] Create FrequencyController with calculate/override endpoints in backend/src/AgenticShopper.Agents.Frequency/Controllers/FrequencyController.cs
+- [X] T073 [US2] Implement frequency pause functionality (FR-015) in FrequencyAgent
 - [ ] T074 [US2] Add product normalized name generation for matching in ProductRepository
 - [ ] T075 [US2] Update CoordinatorAgent to orchestrate categorization after receipt processing
 - [ ] T076 [US2] Update CoordinatorAgent to orchestrate frequency calculation after categorization
