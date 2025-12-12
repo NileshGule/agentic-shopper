@@ -1,0 +1,285 @@
+openapi: 3.0.3
+info:
+  title: Budget Agent API
+  description: Spending analytics and budget tracking
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5006/api/v1
+    description: Local development
+  - url: https://budget-agent.azurecontainerapps.io/api/v1
+    description: Azure Container Apps
+
+tags:
+  - name: Budgets
+    description: Budget management operations
+  - name: Analytics
+    description: Spending analytics operations
+
+paths:
+  /budgets/{id}/status:
+    get:
+      summary: Get current budget status and spending
+      tags: [Budgets]
+      operationId: getBudgetStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Budget status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetStatus'
+        '404':
+          description: Budget not found
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+  /budgets/track:
+    post:
+      summary: Record purchase and update budget tracking
+      tags: [Budgets]
+      operationId: trackPurchase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - familyId
+                - categoryId
+                - amount
+                - purchaseDate
+              properties:
+                familyId:
+                  type: string
+                  format: uuid
+                categoryId:
+                  type: string
+                  format: uuid
+                amount:
+                  type: number
+                  format: decimal
+                purchaseDate:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Purchase tracked, budget updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  budgetId:
+                    type: string
+                    format: uuid
+                  currentSpent:
+                    type: number
+                    format: decimal
+                  budgetAmount:
+                    type: number
+                    format: decimal
+                  percentageUsed:
+                    type: number
+                    format: decimal
+                  alertTriggered:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+  /budgets/analytics:
+    get:
+      summary: Get spending analytics and trends
+      tags: [Analytics]
+      operationId: getAnalytics
+      parameters:
+        - name: familyId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [week, month, quarter, year]
+            default: month
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by category
+      responses:
+        '200':
+          description: Spending analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpendingAnalytics'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+components:
+  schemas:
+    BudgetStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        familyId:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+        categoryName:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        currentSpent:
+          type: number
+          format: decimal
+        remaining:
+          type: number
+          format: decimal
+        percentageUsed:
+          type: number
+          format: decimal
+        period:
+          type: string
+          enum: [Weekly, Monthly]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        alertThreshold:
+          type: number
+          format: decimal
+          description: Percentage threshold (e.g., 0.90 for 90%)
+        isOverBudget:
+          type: boolean
+        daysRemaining:
+          type: integer
+
+    SpendingAnalytics:
+      type: object
+      properties:
+        period:
+          type: string
+          enum: [week, month, quarter, year]
+        familyId:
+          type: string
+          format: uuid
+        categoryBreakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryId:
+                type: string
+                format: uuid
+              categoryName:
+                type: string
+              totalSpent:
+                type: number
+                format: decimal
+              percentage:
+                type: number
+                format: decimal
+              transactionCount:
+                type: integer
+        storeBreakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              storeName:
+                type: string
+              totalSpent:
+                type: number
+                format: decimal
+              percentage:
+                type: number
+                format: decimal
+        trends:
+          type: object
+          properties:
+            weeklyAverage:
+              type: number
+              format: decimal
+            monthlyAverage:
+              type: number
+              format: decimal
+            trend:
+              type: string
+              enum: [Increasing, Decreasing, Stable]
+            changePercentage:
+              type: number
+              format: decimal
+        totalSpending:
+          type: number
+          format: decimal
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

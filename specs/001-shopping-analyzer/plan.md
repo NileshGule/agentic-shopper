@@ -12,8 +12,8 @@ Build an AI-powered shopping pattern analyzer using a multi-agent architecture. 
 
 ## Technical Context
 
-**Language/Version**: C# 12 (.NET 8.0)  
-**Primary Framework**: Microsoft Semantic Kernel 1.x + Agentic Framework
+**Language/Version**: C# 12 (.NET 10)  
+**Primary Framework**: Microsoft Agent Framework
 **AI/LLM**: Foundry Local models (with abstraction layer for Azure AI Foundry migration)
 **Frontend**: React 18.x with TypeScript  
 **Backend Architecture**: Multi-agent system with autonomous agents + coordinator agent

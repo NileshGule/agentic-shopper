@@ -1,0 +1,220 @@
+openapi: 3.0.3
+info:
+  title: Frequency Agent API
+  description: Purchase frequency calculation and management
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5003/api/v1
+    description: Local development
+  - url: https://frequency-agent.azurecontainerapps.io/api/v1
+    description: Azure Container Apps
+
+tags:
+  - name: Frequency
+    description: Purchase frequency operations
+
+paths:
+  /frequency/calculate:
+    post:
+      summary: Calculate purchase frequency for product based on history
+      tags: [Frequency]
+      operationId: calculateFrequency
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - productId
+              properties:
+                productId:
+                  type: string
+                  format: uuid
+                purchaseDates:
+                  type: array
+                  items:
+                    type: string
+                    format: date
+                  description: Historical purchase dates (minimum 3 required)
+      responses:
+        '200':
+          description: Frequency calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FrequencyResult'
+        '400':
+          description: Insufficient data (less than 3 purchases)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+  /frequency/override:
+    put:
+      summary: Manually set or override purchase frequency
+      tags: [Frequency]
+      operationId: overrideFrequency
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - productId
+                - frequency
+              properties:
+                productId:
+                  type: string
+                  format: uuid
+                frequency:
+                  type: string
+                  enum: [Weekly, Fortnightly, Monthly, Quarterly, Annually, Occasional]
+      responses:
+        '200':
+          description: Frequency updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductFrequency'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Product not found
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+  /frequency/pause:
+    put:
+      summary: Pause frequency tracking (vacation mode)
+      tags: [Frequency]
+      operationId: pauseFrequency
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - productId
+                - paused
+              properties:
+                productId:
+                  type: string
+                  format: uuid
+                paused:
+                  type: boolean
+      responses:
+        '200':
+          description: Frequency pause status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductFrequency'
+        '404':
+          description: Product not found
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+components:
+  schemas:
+    FrequencyResult:
+      type: object
+      required:
+        - productId
+        - frequency
+        - confidence
+        - averageInterval
+      properties:
+        productId:
+          type: string
+          format: uuid
+        frequency:
+          type: string
+          enum: [Unknown, Weekly, Fortnightly, Monthly, Quarterly, Annually, Occasional]
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          example: 0.88
+        averageInterval:
+          type: integer
+          description: Average days between purchases
+          example: 14
+        lastPurchased:
+          type: string
+          format: date
+        nextSuggestedPurchase:
+          type: string
+          format: date
+        purchaseCount:
+          type: integer
+          description: Total number of purchases analyzed
+
+    ProductFrequency:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        frequency:
+          type: string
+          enum: [Unknown, Weekly, Fortnightly, Monthly, Quarterly, Annually, Occasional]
+        isManualOverride:
+          type: boolean
+        isPaused:
+          type: boolean
+        lastPurchased:
+          type: string
+          format: date
+        updatedDate:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

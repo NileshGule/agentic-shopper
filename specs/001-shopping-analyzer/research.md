@@ -498,7 +498,7 @@ public class PriceAgentMessageHandler
 
 | Category | Technology | Purpose |
 |----------|-----------|---------|
-| **Language** | C# 12 (.NET 8.0) | Backend agents, APIs, coordinator |
+| **Language** | C# 12 (.NET 10) | Backend agents, APIs, coordinator |
 | **AI Framework** | Microsoft Agent Framework | Multi-agent orchestration, LLM abstraction, agent lifecycle management |
 | **LLM (Dev)** | Foundry Local | Local model hosting during development |
 | **LLM (Prod)** | Azure AI Foundry | Production-grade managed LLM service |

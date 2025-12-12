@@ -1,0 +1,273 @@
+openapi: 3.0.3
+info:
+  title: Price Comparison Agent API
+  description: Promotion tracking and multi-store price comparison
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5005/api/v1
+    description: Local development
+  - url: https://price-agent.azurecontainerapps.io/api/v1
+    description: Azure Container Apps
+
+tags:
+  - name: Promotions
+    description: Store promotion operations
+  - name: Prices
+    description: Price comparison operations
+
+paths:
+  /promotions/current:
+    get:
+      summary: Get current promotions for stores
+      tags: [Promotions]
+      operationId: getCurrentPromotions
+      parameters:
+        - name: store
+          in: query
+          schema:
+            type: string
+            enum: [Coles, Woolworths, All]
+          description: Filter by store
+        - name: productName
+          in: query
+          schema:
+            type: string
+          description: Search promotions by product name
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Current promotions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  promotions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Promotion'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+  /prices/compare:
+    post:
+      summary: Compare prices across stores for shopping list items
+      tags: [Prices]
+      operationId: comparePrices
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - products
+              properties:
+                products:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - productName
+                    properties:
+                      productName:
+                        type: string
+                      quantity:
+                        type: number
+                        format: decimal
+      responses:
+        '200':
+          description: Price comparison results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceComparison'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+  /promotions/refresh:
+    post:
+      summary: Trigger manual promotion data refresh (admin only)
+      tags: [Promotions]
+      operationId: refreshPromotions
+      responses:
+        '202':
+          description: Refresh job started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId:
+                    type: string
+                  status:
+                    type: string
+                    example: "Started"
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+components:
+  schemas:
+    Promotion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        storeName:
+          type: string
+          enum: [Coles, Woolworths]
+        originalPrice:
+          type: number
+          format: decimal
+        salePrice:
+          type: number
+          format: decimal
+        discountPercentage:
+          type: number
+          format: decimal
+          example: 25.5
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        catalogWeek:
+          type: string
+          example: "2025-W50"
+
+    PriceComparison:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductPriceComparison'
+        summary:
+          type: object
+          properties:
+            colesTotal:
+              type: number
+              format: decimal
+            woolworthsTotal:
+              type: number
+              format: decimal
+            potentialSavings:
+              type: number
+              format: decimal
+            recommendedStore:
+              type: string
+              enum: [Coles, Woolworths, Split]
+            splitStrategy:
+              type: object
+              properties:
+                colesPurchases:
+                  type: array
+                  items:
+                    type: string
+                woolworthsPurchases:
+                  type: array
+                  items:
+                    type: string
+                totalSavings:
+                  type: number
+                  format: decimal
+
+    ProductPriceComparison:
+      type: object
+      properties:
+        productName:
+          type: string
+        quantity:
+          type: number
+          format: decimal
+        colesPrice:
+          type: number
+          format: decimal
+          nullable: true
+        woolworthsPrice:
+          type: number
+          format: decimal
+          nullable: true
+        colesPromotion:
+          $ref: '#/components/schemas/Promotion'
+        woolworthsPromotion:
+          $ref: '#/components/schemas/Promotion'
+        bestPrice:
+          type: number
+          format: decimal
+        bestStore:
+          type: string
+          enum: [Coles, Woolworths]
+        savings:
+          type: number
+          format: decimal
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

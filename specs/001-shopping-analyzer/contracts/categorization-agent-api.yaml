@@ -1,0 +1,241 @@
+openapi: 3.0.3
+info:
+  title: Categorization Agent API
+  description: LLM-powered product categorization with user overrides
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5002/api/v1
+    description: Local development
+  - url: https://categorization-agent.azurecontainerapps.io/api/v1
+    description: Azure Container Apps
+
+tags:
+  - name: Categorization
+    description: Product categorization operations
+  - name: Categories
+    description: Category management
+
+paths:
+  /categorize/suggest:
+    post:
+      summary: Get AI-suggested category for product
+      tags: [Categorization]
+      operationId: suggestCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - productName
+              properties:
+                productName:
+                  type: string
+                  example: "Pura Full Cream Milk 2L"
+                context:
+                  type: string
+                  description: Additional context (store, purchase history)
+      responses:
+        '200':
+          description: Category suggestion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategorySuggestion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+  /categories/assign:
+    put:
+      summary: Assign category to product (manual or accept suggestion)
+      tags: [Categories]
+      operationId: assignCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - productId
+                - categoryId
+              properties:
+                productId:
+                  type: string
+                  format: uuid
+                categoryId:
+                  type: string
+                  format: uuid
+                isManualOverride:
+                  type: boolean
+                  description: True if user manually changed from suggestion
+      responses:
+        '200':
+          description: Category assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCategory'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Product or category not found
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+  /categories/custom:
+    post:
+      summary: Create custom category for family
+      tags: [Categories]
+      operationId: createCustomCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - familyId
+                - name
+              properties:
+                familyId:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                  maxLength: 50
+                  example: "Baby Products"
+                description:
+                  type: string
+                  maxLength: 200
+      responses:
+        '201':
+          description: Custom category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Category name already exists for family
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+components:
+  schemas:
+    CategorySuggestion:
+      type: object
+      required:
+        - categoryId
+        - categoryName
+        - confidence
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        categoryName:
+          type: string
+          example: "Dairy"
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          example: 0.95
+        reasoning:
+          type: string
+          example: "Product name contains 'milk' which is a dairy product"
+        alternativeSuggestions:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryId:
+                type: string
+                format: uuid
+              categoryName:
+                type: string
+              confidence:
+                type: number
+                format: float
+
+    ProductCategory:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        categoryName:
+          type: string
+        isManualOverride:
+          type: boolean
+        assignedDate:
+          type: string
+          format: date-time
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        isCustom:
+          type: boolean
+        familyId:
+          type: string
+          format: uuid
+          nullable: true
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,0 +1,337 @@
+openapi: 3.0.3
+info:
+  title: Receipt Agent API
+  description: OCR processing and receipt verification for grocery receipts
+  version: 1.0.0
+  contact:
+    name: Agentic Shopper Team
+
+servers:
+  - url: http://localhost:5001/api/v1
+    description: Local development
+  - url: https://receipt-agent.azurecontainerapps.io/api/v1
+    description: Azure Container Apps
+  - url: https://receipt-agent.foundry.azure.com/api/v1
+    description: Foundry Agent Service
+
+tags:
+  - name: OCR
+    description: Optical character recognition operations
+  - name: Receipts
+    description: Receipt management operations
+
+paths:
+  /ocr/extract:
+    post:
+      summary: Extract data from receipt image using OCR
+      tags: [OCR]
+      operationId: extractReceiptData
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Receipt image (JPEG, PNG, or PDF, max 10MB)
+                familyId:
+                  type: string
+                  format: uuid
+                  description: Family account identifier
+                uploadedBy:
+                  type: string
+                  format: uuid
+                  description: User profile identifier
+      responses:
+        '200':
+          description: OCR extraction successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OcrResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          description: Image file too large (>10MB)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+  /receipts/verify:
+    post:
+      summary: Verify and save receipt data after manual review
+      tags: [Receipts]
+      operationId: verifyReceipt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiptVerification'
+      responses:
+        '200':
+          description: Receipt verified and saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Receipt'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Receipt not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+  /receipts/{id}:
+    get:
+      summary: Get receipt details by ID
+      tags: [Receipts]
+      operationId: getReceipt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Receipt details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Receipt'
+        '404':
+          description: Receipt not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security:
+        - BearerAuth: []
+
+components:
+  schemas:
+    OcrResult:
+      type: object
+      required:
+        - receiptId
+        - storeName
+        - purchaseDate
+        - totalAmount
+        - items
+        - confidenceScore
+      properties:
+        receiptId:
+          type: string
+          format: uuid
+        storeName:
+          type: string
+          example: "Coles"
+        purchaseDate:
+          type: string
+          format: date
+          example: "2025-12-13"
+        totalAmount:
+          type: number
+          format: decimal
+          example: 127.45
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptItem'
+        confidenceScore:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          example: 0.92
+          description: Overall OCR confidence (0.0-1.0)
+        imageUrl:
+          type: string
+          format: uri
+          example: "https://storage.blob.core.windows.net/receipts/abc-123.jpg"
+        status:
+          type: string
+          enum: [Pending, NeedsReview, Verified]
+          example: "NeedsReview"
+
+    ReceiptItem:
+      type: object
+      required:
+        - productName
+        - quantity
+        - unitPrice
+        - totalPrice
+      properties:
+        productName:
+          type: string
+          example: "Milk Full Cream 2L"
+        quantity:
+          type: number
+          format: decimal
+          example: 2
+        unitPrice:
+          type: number
+          format: decimal
+          example: 3.50
+        totalPrice:
+          type: number
+          format: decimal
+          example: 7.00
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          example: 0.95
+
+    ReceiptVerification:
+      type: object
+      required:
+        - receiptId
+        - storeName
+        - purchaseDate
+        - totalAmount
+        - items
+      properties:
+        receiptId:
+          type: string
+          format: uuid
+        storeName:
+          type: string
+        purchaseDate:
+          type: string
+          format: date
+        totalAmount:
+          type: number
+          format: decimal
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptItem'
+
+    Receipt:
+      type: object
+      required:
+        - id
+        - familyId
+        - uploadedBy
+        - storeName
+        - purchaseDate
+        - totalAmount
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        familyId:
+          type: string
+          format: uuid
+        uploadedBy:
+          type: string
+          format: uuid
+        storeName:
+          type: string
+        purchaseDate:
+          type: string
+          format: date
+        totalAmount:
+          type: number
+          format: decimal
+        imageUrl:
+          type: string
+          format: uri
+        confidenceScore:
+          type: number
+          format: float
+        status:
+          type: string
+          enum: [Pending, NeedsReview, Verified, Archived]
+        createdDate:
+          type: string
+          format: date-time
+        verifiedDate:
+          type: string
+          format: date-time
+        purchases:
+          type: array
+          items:
+            $ref: '#/components/schemas/Purchase'
+
+    Purchase:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        quantity:
+          type: number
+          format: decimal
+        unitPrice:
+          type: number
+          format: decimal
+        totalPrice:
+          type: number
+          format: decimal
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: "INVALID_IMAGE_FORMAT"
+        message:
+          type: string
+          example: "Only JPEG, PNG, and PDF formats are supported"
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for family account authentication
