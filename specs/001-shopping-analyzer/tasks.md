@@ -48,8 +48,8 @@
 - [X] T017 [P] Implement FoundryLocalProvider in backend/src/AgenticShopper.Core/Abstractions/FoundryLocalProvider.cs
 - [X] T018 [P] Implement AzureAIFoundryProvider in backend/src/AgenticShopper.Core/Abstractions/AzureAIFoundryProvider.cs
 - [X] T019 Implement LLM provider factory with configuration-based selection in backend/src/AgenticShopper.Core/Abstractions/LlmProviderFactory.cs
-- [ ] T020 [P] Configure Microsoft Agent Framework runtime in backend/src/AgenticShopper.Coordinator/Program.cs
-- [ ] T021 [P] Implement AgentBase abstract class in backend/src/AgenticShopper.Core/Abstractions/AgentBase.cs
+- [X] T020 [P] Configure Microsoft Agent Framework runtime in backend/src/AgenticShopper.Coordinator/Program.cs
+- [X] T021 [P] Implement AgentBase abstract class in backend/src/AgenticShopper.Core/Abstractions/AgentBase.cs
 - [ ] T022 [P] Setup JWT authentication middleware in backend/src/AgenticShopper.Coordinator/Middleware/
 - [X] T023 [P] Configure CORS for React frontend in backend/src/AgenticShopper.Coordinator/Program.cs
 - [X] T024 [P] Setup error handling middleware in backend/src/AgenticShopper.Coordinator/Middleware/ErrorHandlingMiddleware.cs
@@ -80,12 +80,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T039 [P] [US1] Create Receipt entity in backend/src/AgenticShopper.Core/Models/Receipt.cs
-- [ ] T040 [P] [US1] Create Product entity in backend/src/AgenticShopper.Core/Models/Product.cs
-- [ ] T041 [P] [US1] Create Purchase entity in backend/src/AgenticShopper.Core/Models/Purchase.cs
-- [ ] T042 [US1] Add Receipt, Product, Purchase tables to EF Core migration (depends on T039-T041)
-- [ ] T043 [US1] Implement ReceiptRepository in backend/src/AgenticShopper.Data/Repositories/ReceiptRepository.cs
-- [ ] T044 [P] [US1] Implement ProductRepository in backend/src/AgenticShopper.Data/Repositories/ProductRepository.cs
+- [X] T039 [P] [US1] Create Receipt entity in backend/src/AgenticShopper.Core/Models/Receipt.cs
+- [X] T040 [P] [US1] Create Product entity in backend/src/AgenticShopper.Core/Models/Product.cs
+- [X] T041 [P] [US1] Create Purchase entity in backend/src/AgenticShopper.Core/Models/Purchase.cs
+- [X] T042 [US1] Add Receipt, Product, Purchase tables to EF Core migration (depends on T039-T041)
+- [X] T043 [US1] Implement ReceiptRepository in backend/src/AgenticShopper.Data/Repositories/ReceiptRepository.cs
+- [X] T044 [P] [US1] Implement ProductRepository in backend/src/AgenticShopper.Data/Repositories/ProductRepository.cs
 - [ ] T045 [P] [US1] Create IOcrService interface in backend/src/AgenticShopper.Agents.Receipt/Interfaces/IOcrService.cs
 - [ ] T046 [US1] Implement AzureDocumentIntelligenceOcrService in backend/src/AgenticShopper.Agents.Receipt/Services/AzureDocumentIntelligenceOcrService.cs
 - [ ] T047 [P] [US1] Implement PaddleOcrService for local dev in backend/src/AgenticShopper.Agents.Receipt/Services/PaddleOcrService.cs

@@ -1,7 +1,10 @@
 using AgenticShopper.Coordinator.Hubs;
 using AgenticShopper.Coordinator.Middleware;
+using AgenticShopper.Core.Interfaces;
+using AgenticShopper.Core.Models;
 using AgenticShopper.Core.Services;
 using AgenticShopper.Data;
+using AgenticShopper.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -31,6 +34,10 @@ try
 
     // Add controllers
     builder.Services.AddControllers();
+
+    // Register repositories
+    builder.Services.AddScoped<IRepository<Receipt>, ReceiptRepository>();
+    builder.Services.AddScoped<IRepository<Product>, ProductRepository>();
 
     // Register services
     builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
