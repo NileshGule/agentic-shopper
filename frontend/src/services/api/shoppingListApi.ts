@@ -95,6 +95,8 @@ export interface ShoppingListItem {
     name: string;
     categoryId?: string;
     categoryName?: string;
+    notes?: string; // Product notes for reference
+    tags?: string; // JSON string of tags
   };
 }
 

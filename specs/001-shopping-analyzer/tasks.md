@@ -299,7 +299,7 @@
 - [X] T177 [US7] Add notes/tags editor in ProductsPage
 - [X] T178 [US7] Implement tag autocomplete for common tags (organic, gluten-free, etc.)
 - [X] T179 [US7] Add tag filtering UI with chip-based selection
-- [ ] T180 [US7] Display product notes in shopping list items
+- [X] T180 [US7] Display product notes in shopping list items
 - [X] T181 [US7] Implement notes search functionality
 
 **Checkpoint**: User Story 7 complete - Product notes and metadata functional

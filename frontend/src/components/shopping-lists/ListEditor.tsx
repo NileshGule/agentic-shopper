@@ -293,6 +293,12 @@ export const ListEditor: React.FC<ListEditorProps> = ({
                       <span className="item-name">
                         {item.product?.name || 'Unknown Product'}
                       </span>
+                      {item.product?.notes && (
+                        <div className="item-notes">
+                          <span className="notes-icon" title="Product notes">📝</span>
+                          <span className="notes-text">{item.product.notes}</span>
+                        </div>
+                      )}
                       <div className="item-meta">
                         <span 
                           className="urgency-badge"
