@@ -487,7 +487,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Product categorization with AI
 - ✅ Purchase frequency tracking
 - ✅ Shopping list generation
-- 🚧 Price comparison and promotions (52% complete)
+- 🚧 Price comparison and promotions (74% complete)
 
 ### v1.1 (Planned)
 - Family account collaboration
@@ -509,6 +509,25 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Build Status**: 🟢 Passing (Backend) | 🟢 Passing (Frontend)
 
 **Recent Updates:**
+
+**Commit b880369** (User Story 4 - T123-T128 Frontend):
+- ✅ priceApi TypeScript client for price comparison API (210 lines)
+- ✅ getCurrentPromotions with filtering, pagination, product search
+- ✅ comparePrices for multi-product comparison across stores
+- ✅ comparePricesForList convenience method for shopping lists
+- ✅ getBestShoppingOption helper with split strategy analysis
+- ✅ Full TypeScript interfaces matching backend DTOs
+- ✅ PriceComparison React component (291 lines)
+- ✅ Product-by-product comparison table with Coles vs Woolworths
+- ✅ Promotion indicators with discount percentage badges
+- ✅ Original/sale price display with strikethrough
+- ✅ Best price highlighting with color-coded store badges
+- ✅ Savings summary card with gradient design
+- ✅ Split shopping strategy display with item-by-store lists
+- ✅ Responsive CSS with mobile-first design (382 lines)
+- ✅ Loading/error states with retry functionality
+- ✅ 883 lines of frontend price comparison code
+- ✅ User Story 4: 74% Complete (17/23 tasks)
 
 **Commit 2326973** (User Story 4 - T119-T121):
 - ✅ PromotionRefreshJob background service for weekly catalog updates (114 lines)
@@ -606,8 +625,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Auto/manual visual indicators with emoji badges (🤖 vs 👤)
 
 **Implementation Progress**:
-- Tasks Completed: T001-T121 (121/489 tasks = 25%)
-- User Stories: 3 Complete ✅ | 1 In Progress 🚧 (US4: 52%) | 3 Planned 📋
+- Tasks Completed: T001-T128 (128/489 tasks = 26%)
+- User Stories: 3 Complete ✅ | 1 In Progress 🚧 (US4: 74%) | 3 Planned 📋
 - Backend Agents: 5/6 (Receipt ✅, Categorization ✅, Frequency ✅, ListGenerator ✅, PriceComparison 🚧)
-- Frontend Pages: 3/6 (Receipts ✅, Products ✅, Shopping Lists ✅)
-- Lines of Code: ~20,300+ (backend + frontend)
+- Frontend Pages: 4/6 (Receipts ✅, Products ✅, Shopping Lists ✅, Price Comparison 🚧)
+- Lines of Code: ~21,200+ (backend + frontend)
