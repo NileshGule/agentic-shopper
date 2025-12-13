@@ -1,4 +1,6 @@
 using AgenticShopper.Agents.Receipt.Interfaces;
+using Azure;
+using Azure.AI.FormRecognizer.DocumentAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -49,44 +51,7 @@ public class AzureDocumentIntelligenceOcrService : IOcrService
                 "Processing receipt '{FileName}' with Azure Document Intelligence",
                 fileName);
 
-            // TODO: Implement actual Azure Document Intelligence SDK integration
-            // For now, return mock data for development
-            _logger.LogWarning("Azure Document Intelligence integration not yet implemented, returning mock data");
-
-            return new OcrResult
-            {
-                IsSuccess = true,
-                StoreName = "Mock Store (Azure OCR)",
-                PurchaseDate = DateTime.UtcNow.AddDays(-1),
-                TotalAmount = 45.67m,
-                ConfidenceScore = 0.95,
-                RawText = "Mock OCR text from Azure Document Intelligence",
-                ProviderName = ProviderName,
-                LineItems = new List<OcrLineItem>
-                {
-                    new OcrLineItem
-                    {
-                        ProductName = "Mock Product 1",
-                        Quantity = 2,
-                        UnitPrice = 10.50m,
-                        TotalPrice = 21.00m,
-                        Confidence = 0.95
-                    },
-                    new OcrLineItem
-                    {
-                        ProductName = "Mock Product 2",
-                        Quantity = 1,
-                        UnitPrice = 24.67m,
-                        TotalPrice = 24.67m,
-                        Confidence = 0.92
-                    }
-                }
-            };
-
-            /*
-            // ACTUAL IMPLEMENTATION (for future use):
-            
-            using var client = new DocumentAnalysisClient(
+            var client = new DocumentAnalysisClient(
                 new Uri(_endpoint),
                 new AzureKeyCredential(_apiKey));
 
@@ -113,15 +78,16 @@ public class AzureDocumentIntelligenceOcrService : IOcrService
             return new OcrResult
             {
                 IsSuccess = true,
-                StoreName = receipt.Fields.GetValueOrDefault("MerchantName")?.Value.AsString(),
-                PurchaseDate = receipt.Fields.GetValueOrDefault("TransactionDate")?.Value.AsDate()?.DateTime,
+                StoreName = receipt.Fields.GetValueOrDefault("MerchantName")?.Content,
+                PurchaseDate = receipt.Fields.TryGetValue("TransactionDate", out var transactionDate) && transactionDate != null
+                    ? transactionDate.Value.AsDate().DateTime
+                    : (DateTime?)null,
                 TotalAmount = (decimal?)receipt.Fields.GetValueOrDefault("Total")?.Value.AsDouble(),
-                ConfidenceScore = receipt.Confidence,
+                ConfidenceScore = (double)receipt.Confidence,
                 RawText = string.Join(" ", result.Pages.SelectMany(p => p.Lines).Select(l => l.Content)),
                 ProviderName = ProviderName,
                 LineItems = ParseLineItems(receipt)
             };
-            */
         }
         catch (Exception ex)
         {
@@ -148,29 +114,42 @@ public class AzureDocumentIntelligenceOcrService : IOcrService
         return Task.FromResult(isConfigured);
     }
 
-    /*
     private List<OcrLineItem> ParseLineItems(AnalyzedDocument receipt)
     {
         var lineItems = new List<OcrLineItem>();
 
-        if (receipt.Fields.TryGetValue("Items", out var itemsField))
+        if (receipt.Fields.TryGetValue("Items", out var itemsField) && itemsField != null)
         {
-            foreach (var item in itemsField.Value.AsList())
+            try
             {
-                var itemFields = item.Value.AsDictionary();
-                
-                lineItems.Add(new OcrLineItem
+                var itemsList = itemsField.Value.AsList();
+                foreach (var item in itemsList)
                 {
-                    ProductName = itemFields.GetValueOrDefault("Description")?.Value.AsString() ?? "Unknown",
-                    Quantity = (decimal?)itemFields.GetValueOrDefault("Quantity")?.Value.AsDouble() ?? 1,
-                    UnitPrice = (decimal?)itemFields.GetValueOrDefault("Price")?.Value.AsDouble() ?? 0,
-                    TotalPrice = (decimal?)itemFields.GetValueOrDefault("TotalPrice")?.Value.AsDouble() ?? 0,
-                    Confidence = item.Confidence
-                });
+                    try
+                    {
+                        var itemFields = item.Value.AsDictionary();
+                        
+                        lineItems.Add(new OcrLineItem
+                        {
+                            ProductName = itemFields.GetValueOrDefault("Description")?.Content ?? "Unknown",
+                            Quantity = (decimal?)itemFields.GetValueOrDefault("Quantity")?.Value.AsDouble() ?? 1,
+                            UnitPrice = (decimal?)itemFields.GetValueOrDefault("Price")?.Value.AsDouble() ?? 0,
+                            TotalPrice = (decimal?)itemFields.GetValueOrDefault("TotalPrice")?.Value.AsDouble() ?? 0,
+                            Confidence = item.Confidence ?? 0.0
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to parse line item, skipping");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse Items field as list");
             }
         }
 
         return lineItems;
     }
-    */
 }
