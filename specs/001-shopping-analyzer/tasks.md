@@ -293,7 +293,7 @@
 - [X] T171 [US7] Add search/filter by tags and notes in ProductRepository query methods
 - [X] T172 [US7] Create ProductController with notes/tags endpoints in backend/src/AgenticShopper.Coordinator/Controllers/ProductController.cs
 - [X] T173 [US7] Implement tag-based product filtering logic
-- [ ] T174 [US7] Add notes display in shopping list generation
+- [X] T174 [US7] Add notes display in shopping list generation
 - [X] T175 [P] [US7] Create ProductNotes component in frontend/src/components/products/ProductNotes.tsx
 - [X] T176 [US7] Implement product API client in frontend/src/services/api/productApi.ts
 - [X] T177 [US7] Add notes/tags editor in ProductsPage
