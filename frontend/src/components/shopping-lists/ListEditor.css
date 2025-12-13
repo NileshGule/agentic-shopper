@@ -1,0 +1,266 @@
+.list-editor {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.list-info h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.list-date {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.btn-complete {
+  padding: 10px 20px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-complete:hover:not(:disabled) {
+  background: #218838;
+}
+
+.btn-complete:disabled {
+  background: #c0c0c0;
+  cursor: not-allowed;
+}
+
+.progress-section {
+  margin-bottom: 24px;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 12px;
+  background: #e9ecef;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #28a745, #20c997);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  text-align: right;
+}
+
+.error-message {
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  font-size: 14px;
+}
+
+.error-icon {
+  font-size: 18px;
+}
+
+.items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.category-section {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.category-title {
+  margin: 0;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  font-size: 16px;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item:hover {
+  background: #fafafa;
+}
+
+.list-item.purchased {
+  opacity: 0.6;
+}
+
+.list-item.purchased .item-name {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.item-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.item-checkbox {
+  margin: 4px 0 0 0;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.item-checkbox:disabled {
+  cursor: not-allowed;
+}
+
+.item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.item-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.item-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.urgency-badge,
+.quantity-badge,
+.source-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.urgency-badge {
+  /* Color set inline based on urgency */
+}
+
+.urgency-icon {
+  font-size: 14px;
+}
+
+.quantity-badge {
+  background: #e7f3ff;
+  color: #0066cc;
+}
+
+.source-badge {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.btn-remove {
+  padding: 6px 10px;
+  background: transparent;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-remove:hover:not(:disabled) {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #999;
+}
+
+.empty-icon {
+  display: block;
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .list-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .btn-complete {
+    width: 100%;
+  }
+
+  .item-meta {
+    flex-direction: column;
+  }
+}
