@@ -1,4 +1,5 @@
 using AgenticShopper.Agents.Receipt;
+using AgenticShopper.Agents.Frequency;
 using AgenticShopper.Coordinator.DTOs;
 using AgenticShopper.Core.Interfaces;
 using AgenticShopper.Core.Models;
@@ -13,15 +14,18 @@ public class ReceiptsController : ControllerBase
     private readonly ILogger<ReceiptsController> _logger;
     private readonly ReceiptAgent _receiptAgent;
     private readonly IRepository<Receipt> _receiptRepository;
+    private readonly FrequencyAgent _frequencyAgent;
 
     public ReceiptsController(
         ILogger<ReceiptsController> logger,
         ReceiptAgent receiptAgent,
-        IRepository<Receipt> receiptRepository)
+        IRepository<Receipt> receiptRepository,
+        FrequencyAgent frequencyAgent)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _receiptAgent = receiptAgent ?? throw new ArgumentNullException(nameof(receiptAgent));
         _receiptRepository = receiptRepository ?? throw new ArgumentNullException(nameof(receiptRepository));
+        _frequencyAgent = frequencyAgent ?? throw new ArgumentNullException(nameof(frequencyAgent));
     }
 
     /// <summary>
@@ -118,9 +122,75 @@ public class ReceiptsController : ControllerBase
                 response.ReceiptId,
                 response.Status);
 
-            // TODO: Orchestrate post-processing (categorization and frequency calculation)
-            // This requires batch processing support in agents or async background jobs
-            // For now, categorization and frequency can be triggered via explicit API calls
+            // T085 [FR-014]: Trigger frequency recalculation for products in this receipt
+            // This happens asynchronously after receipt upload to update purchase frequency patterns
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    _logger.LogInformation(
+                        "Starting frequency recalculation for receipt {ReceiptId} with {ItemCount} items",
+                        result.Data.ReceiptId,
+                        result.Data.ItemCount);
+
+                    // Get the full receipt with purchases
+                    var receiptWithPurchases = await _receiptRepository.GetByIdAsync(
+                        result.Data.ReceiptId,
+                        CancellationToken.None);
+
+                    if (receiptWithPurchases?.Purchases == null || !receiptWithPurchases.Purchases.Any())
+                    {
+                        _logger.LogWarning(
+                            "No purchases found for receipt {ReceiptId}, skipping frequency recalculation",
+                            result.Data.ReceiptId);
+                        return;
+                    }
+
+                    // Extract unique product IDs from purchases
+                    var productIds = receiptWithPurchases.Purchases
+                        .Select(p => p.ProductId)
+                        .Distinct()
+                        .ToList();
+
+                    _logger.LogInformation(
+                        "Recalculating frequency for {ProductCount} unique products from receipt {ReceiptId}",
+                        productIds.Count,
+                        result.Data.ReceiptId);
+
+                    // Trigger batch frequency calculation
+                    var batchRequest = new BatchFrequencyRequest
+                    {
+                        ProductIds = productIds,
+                        ForceRecalculate = true // Always recalculate when new purchase is added
+                    };
+
+                    var frequencyResult = await _frequencyAgent.ExecuteAsync<BatchFrequencyRequest, FrequencyCalculationResponse>(
+                        batchRequest,
+                        CancellationToken.None);
+
+                    if (frequencyResult.IsSuccess)
+                    {
+                        _logger.LogInformation(
+                            "Successfully recalculated frequencies for {ProductCount} products from receipt {ReceiptId}",
+                            productIds.Count,
+                            result.Data.ReceiptId);
+                    }
+                    else
+                    {
+                        _logger.LogWarning(
+                            "Frequency recalculation failed for receipt {ReceiptId}: {ErrorMessage}",
+                            result.Data.ReceiptId,
+                            frequencyResult.ErrorMessage);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "Error during background frequency recalculation for receipt {ReceiptId}",
+                        result.Data.ReceiptId);
+                }
+            }, CancellationToken.None);
 
             return Ok(response);
         }

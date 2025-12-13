@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { PurchaseFrequency } from '../../services/api/productApi';
 import './FrequencyAssignment.css';
-
-export type PurchaseFrequency = 
-  | 'Unknown'
-  | 'Weekly'
-  | 'Fortnightly'
-  | 'Monthly'
-  | 'Quarterly'
-  | 'Annually'
-  | 'Occasional';
 
 export interface FrequencyData {
   frequency: PurchaseFrequency;
@@ -30,12 +22,12 @@ export interface FrequencyAssignmentProps {
 }
 
 const FREQUENCY_OPTIONS: Array<{ value: PurchaseFrequency; label: string; description: string; icon: string }> = [
-  { value: 'Weekly', label: 'Weekly', description: '~7 days', icon: '📅' },
-  { value: 'Fortnightly', label: 'Fortnightly', description: '~14 days', icon: '🗓️' },
-  { value: 'Monthly', label: 'Monthly', description: '~30 days', icon: '📆' },
-  { value: 'Quarterly', label: 'Quarterly', description: '~90 days', icon: '🗒️' },
-  { value: 'Annually', label: 'Annually', description: '~365 days', icon: '🎂' },
-  { value: 'Occasional', label: 'Occasional', description: 'As needed', icon: '🌟' },
+  { value: PurchaseFrequency.Weekly, label: 'Weekly', description: '~7 days', icon: '📅' },
+  { value: PurchaseFrequency.Fortnightly, label: 'Fortnightly', description: '~14 days', icon: '🗓️' },
+  { value: PurchaseFrequency.Monthly, label: 'Monthly', description: '~30 days', icon: '📆' },
+  { value: PurchaseFrequency.Quarterly, label: 'Quarterly', description: '~90 days', icon: '🗒️' },
+  { value: PurchaseFrequency.Annually, label: 'Annually', description: '~365 days', icon: '🎂' },
+  { value: PurchaseFrequency.Occasional, label: 'Occasional', description: 'As needed', icon: '🌟' },
 ];
 
 /**

@@ -135,11 +135,11 @@
 - [X] T078 [P] [US2] Create FrequencyAssignment component in frontend/src/components/products/FrequencyAssignment.tsx
 - [X] T079 [US2] Implement categorization API client in frontend/src/services/api/categorizationApi.ts
 - [X] T080 [P] [US2] Implement frequency API client in frontend/src/services/api/frequencyApi.ts
-- [ ] T081 [US2] Create ProductsPage with categorization and frequency views in frontend/src/pages/ProductsPage.tsx
-- [ ] T082 [US2] Add category dropdown with predefined + custom categories in ProductCategorization
-- [ ] T083 [US2] Implement frequency selector (Weekly, Fortnightly, Monthly, Quarterly, Annually, Occasional)
-- [ ] T084 [US2] Add visual indicators for auto-suggested vs manually-assigned categories
-- [ ] T085 [US2] Implement frequency recalculation on new purchases (FR-014)
+- [X] T081 [US2] Create ProductsPage with categorization and frequency views in frontend/src/pages/ProductsPage.tsx
+- [X] T082 [US2] Add category dropdown with predefined + custom categories in ProductCategorization
+- [X] T083 [US2] Implement frequency selector (Weekly, Fortnightly, Monthly, Quarterly, Annually, Occasional)
+- [X] T084 [US2] Add visual indicators for auto-suggested vs manually-assigned categories
+- [X] T085 [US2] Implement frequency recalculation on new purchases (FR-014)
 
 **Checkpoint**: User Story 2 complete - Product categorization and frequency tracking working independently
 

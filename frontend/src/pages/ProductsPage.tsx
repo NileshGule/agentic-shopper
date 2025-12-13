@@ -1,9 +1,327 @@
+import { useState, useEffect } from 'react';
+import { ProductCategorization } from '../components/products/ProductCategorization';
+import { FrequencyAssignment } from '../components/products/FrequencyAssignment';
+import Button from '../components/common/Button';
+import { productApi, PurchaseFrequency } from '../services/api/productApi';
+import { categorizationApi } from '../services/api/categorizationApi';
+import { frequencyApi } from '../services/api/frequencyApi';
+import type { 
+  Product
+} from '../services/api/productApi';
+import type { 
+  Category, 
+  AssignCategoryRequest 
+} from '../services/api/categorizationApi';
+import type { 
+  FrequencyOverrideRequest 
+} from '../services/api/frequencyApi';
+import './ProductsPage.css';
+
+type FilterMode = 'all' | 'uncategorized' | 'category' | 'frequency';
+
 export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterMode, setFilterMode] = useState<FilterMode>('all');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedFrequency, setSelectedFrequency] = useState<PurchaseFrequency | ''>('');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const cats = await categorizationApi.getCategories();
+        setCategories(cats);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Fetch products based on filters
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        let result: Product[] = [];
+
+        if (filterMode === 'uncategorized') {
+          result = await productApi.getUncategorizedProducts();
+        } else if (filterMode === 'category' && selectedCategoryId) {
+          result = await productApi.getProductsByCategory(selectedCategoryId);
+        } else if (filterMode === 'frequency' && selectedFrequency) {
+          result = await productApi.getProductsByFrequency(selectedFrequency as PurchaseFrequency);
+        } else if (searchTerm.trim()) {
+          result = await productApi.searchProducts(searchTerm.trim());
+        } else {
+          const response = await productApi.getAllProducts();
+          result = response.products;
+        }
+
+        setProducts(result);
+      } catch (err) {
+        console.error('Failed to fetch products:', err);
+        setError('Failed to load products. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [filterMode, selectedCategoryId, selectedFrequency, searchTerm, refreshTrigger]);
+
+  const handleCategoryChange = async (productId: string, categoryId: string, _isManual: boolean) => {
+    try {
+      const request: AssignCategoryRequest = {
+        productId,
+        categoryId,
+      };
+      await categorizationApi.assignCategory(request);
+      
+      // Refresh products to show updated category
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (err) {
+      console.error('Failed to update category:', err);
+      throw new Error('Failed to update category. Please try again.');
+    }
+  };
+
+  const handleSuggestCategory = async (productName: string): Promise<Category | null> => {
+    try {
+      const response = await categorizationApi.suggestCategory({ productName });
+      
+      if (response.categoryId) {
+        const category = categories.find((c) => c.id === response.categoryId);
+        return category || null;
+      }
+      
+      return null;
+    } catch (err) {
+      console.error('Failed to suggest category:', err);
+      return null;
+    }
+  };
+
+  const handleFrequencyChange = async (
+    productId: string, 
+    frequency: PurchaseFrequency, 
+    _isManual: boolean
+  ) => {
+    try {
+      const request: FrequencyOverrideRequest = {
+        productId,
+        frequency: frequency as any, // Convert enum to string type
+      };
+      await frequencyApi.overrideFrequency(request);
+      
+      // Refresh products to show updated frequency
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (err) {
+      console.error('Failed to update frequency:', err);
+      throw new Error('Failed to update frequency. Please try again.');
+    }
+  };
+
+  const handleTogglePause = async (productId: string, isPaused: boolean) => {
+    try {
+      if (isPaused) {
+        await frequencyApi.pauseFrequency(productId);
+      } else {
+        await frequencyApi.resumeFrequency(productId);
+      }
+      
+      // Refresh products to show updated pause state
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (err) {
+      console.error('Failed to toggle pause:', err);
+      throw new Error('Failed to toggle pause. Please try again.');
+    }
+  };
+
+  const handleRecalculate = async (productId: string) => {
+    try {
+      await frequencyApi.calculateFrequency(productId, true);
+      
+      // Refresh products to show recalculated frequency
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (err) {
+      console.error('Failed to recalculate frequency:', err);
+      throw new Error('Failed to recalculate frequency. Please try again.');
+    }
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setFilterMode('all');
+    setSelectedCategoryId('');
+    setSelectedFrequency('');
+  };
+
   return (
     <div className="products-page">
-      <h1>Products</h1>
-      <p>View and categorize your products</p>
-      {/* Product components will be added in User Story 2 */}
+      <div className="page-header">
+        <h1>📦 Product Management</h1>
+        <p className="page-description">
+          View, categorize, and manage purchase frequency for your products
+        </p>
+      </div>
+
+      {/* Filters Section */}
+      <div className="filters-section">
+        <div className="search-bar">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="🔍 Search products by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div className="filter-controls">
+          <div className="filter-group">
+            <label className="filter-label">Filter By:</label>
+            <select
+              className="filter-select"
+              value={filterMode}
+              onChange={(e) => setFilterMode(e.target.value as FilterMode)}
+            >
+              <option value="all">All Products</option>
+              <option value="uncategorized">Uncategorized Only</option>
+              <option value="category">By Category</option>
+              <option value="frequency">By Frequency</option>
+            </select>
+          </div>
+
+          {filterMode === 'category' && (
+            <div className="filter-group">
+              <label className="filter-label">Category:</label>
+              <select
+                className="filter-select"
+                value={selectedCategoryId}
+                onChange={(e) => setSelectedCategoryId(e.target.value)}
+              >
+                <option value="">Select a category...</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name} {cat.isCustom ? '(Custom)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {filterMode === 'frequency' && (
+            <div className="filter-group">
+              <label className="filter-label">Frequency:</label>
+              <select
+                className="filter-select"
+                value={selectedFrequency}
+                onChange={(e) => setSelectedFrequency(e.target.value as PurchaseFrequency)}
+              >
+                <option value="">Select frequency...</option>
+                <option value={PurchaseFrequency.Weekly}>Weekly</option>
+                <option value={PurchaseFrequency.Fortnightly}>Fortnightly</option>
+                <option value={PurchaseFrequency.Monthly}>Monthly</option>
+                <option value={PurchaseFrequency.Quarterly}>Quarterly</option>
+                <option value={PurchaseFrequency.Annually}>Annually</option>
+                <option value={PurchaseFrequency.Occasional}>Occasional</option>
+                <option value={PurchaseFrequency.Unknown}>Unknown</option>
+              </select>
+            </div>
+          )}
+
+          {(searchTerm || filterMode !== 'all') && (
+            <Button variant="secondary" onClick={handleClearFilters}>
+              Clear Filters
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Products List */}
+      <div className="products-content">
+        {loading && <div className="loading-message">Loading products...</div>}
+        
+        {error && <div className="error-message">{error}</div>}
+        
+        {!loading && !error && products.length === 0 && (
+          <div className="empty-state">
+            <p>No products found.</p>
+            {searchTerm && <p>Try adjusting your search or filters.</p>}
+          </div>
+        )}
+
+        {!loading && !error && products.length > 0 && (
+          <div className="products-list">
+            <div className="products-count">
+              Showing {products.length} product{products.length !== 1 ? 's' : ''}
+            </div>
+
+            {products.map((product) => (
+              <div key={product.id} className="product-card">
+                <div className="product-header">
+                  <h3 className="product-name">{product.name}</h3>
+                  <div className="product-meta">
+                    <span className="average-price">
+                      Avg: ${product.averagePrice.toFixed(2)}
+                    </span>
+                    {product.lastPurchased && (
+                      <span className="last-purchased">
+                        Last: {new Date(product.lastPurchased).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="product-body">
+                  <div className="product-section">
+                    <h4 className="section-title">Category</h4>
+                    <ProductCategorization
+                      product={product}
+                      categories={categories}
+                      onCategoryChange={handleCategoryChange}
+                      onSuggestCategory={handleSuggestCategory}
+                    />
+                  </div>
+
+                  <div className="product-section">
+                    <h4 className="section-title">Purchase Frequency</h4>
+                    <FrequencyAssignment
+                      productId={product.id}
+                      frequencyData={{
+                        frequency: product.frequency,
+                        isManual: false, // TODO: Get from backend
+                        purchaseCount: 0, // TODO: Get from backend
+                        lastPurchased: product.lastPurchased,
+                        averageDaysBetween: 0, // TODO: Calculate from backend
+                        nextExpectedDate: undefined, // TODO: Calculate from backend
+                        isPaused: product.frequencyPaused,
+                      }}
+                      onFrequencyChange={handleFrequencyChange}
+                      onTogglePause={handleTogglePause}
+                      onRecalculate={handleRecalculate}
+                    />
+                  </div>
+
+                  {product.notes && (
+                    <div className="product-notes">
+                      <strong>Notes:</strong> {product.notes}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
