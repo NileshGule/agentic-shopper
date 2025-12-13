@@ -584,6 +584,31 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Recent Updates:**
 
+**Commit 1e45d8a** (Azure Document Intelligence OCR Integration):
+- ✅ Implemented real Azure.AI.FormRecognizer 4.1.0 SDK integration
+- ✅ Replaced mock OCR with production DocumentAnalysisClient
+- ✅ Prebuilt-receipt model with field extraction (MerchantName, TransactionDate, Total, Items)
+- ✅ Robust error handling for missing fields and malformed receipts
+- ✅ Line item parsing with confidence scores
+- ✅ Maintains backward compatibility when credentials not configured
+- ✅ Production-ready receipt text extraction
+
+**Commit 829cbf7** (Azure Blob Storage Integration):
+- ✅ Implemented real Azure.Storage.Blobs 12.26.0 SDK integration  
+- ✅ Replaced mock implementations with BlobServiceClient operations
+- ✅ UploadAsync with content type detection (JPEG, PNG, PDF, etc.)
+- ✅ DownloadAsync with streaming support and seekable MemoryStream
+- ✅ DeleteAsync with existence check (DeleteIfExistsAsync)
+- ✅ GetSasUrlAsync with proper read permissions and configurable expiry
+- ✅ Helper methods for connection string parsing (AccountName, AccountKey)
+- ✅ Production-ready receipt image storage
+
+**Commit 659ee2c** (T122 Complete - Price Comparison Integration):
+- ✅ Verified price comparison already integrated via frontend ListEditor.tsx
+- ✅ Automatic promotion loading for all shopping list products
+- ✅ priceApi.getCurrentPromotions() integration working end-to-end
+- ✅ User Story 4: 87% Complete (20/23 tasks)
+
 **Commit 0a33768** (User Story 5 - T142-T152 Frontend Completion):
 - ✅ budgetApi TypeScript client with complete CRUD operations (178 lines)
 - ✅ Charts.tsx reusable components (LineChart, BarChart, PieChart) with Chart.js (237 lines)
