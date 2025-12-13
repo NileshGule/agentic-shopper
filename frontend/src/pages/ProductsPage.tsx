@@ -157,6 +157,18 @@ export default function ProductsPage() {
     }
   };
 
+  const handleMarkPurchased = async (productId: string, purchaseDate: Date) => {
+    try {
+      await frequencyApi.markAsPurchasedExternally(productId, purchaseDate);
+      
+      // Refresh products to show updated frequency
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (err) {
+      console.error('Failed to mark as purchased:', err);
+      throw new Error('Failed to mark as purchased. Please try again.');
+    }
+  };
+
   const handleClearFilters = () => {
     setSearchTerm('');
     setFilterMode('all');
@@ -308,6 +320,7 @@ export default function ProductsPage() {
                       onFrequencyChange={handleFrequencyChange}
                       onTogglePause={handleTogglePause}
                       onRecalculate={handleRecalculate}
+                      onMarkPurchased={handleMarkPurchased}
                     />
                   </div>
 

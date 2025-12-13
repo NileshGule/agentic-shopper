@@ -164,8 +164,8 @@
 - [X] T094 [US3] Implement frequency-based item selection logic in RecommendationEngine
 - [X] T095 [US3] Add category grouping for shopping list items (FR-018) in RecommendationEngine
 - [X] T096 [US3] Implement urgency-based sorting (overdue first) in list generation
-- [ ] T097 [US3] Add "recently purchased outside system" marking functionality (FR-021)
-- [ ] T098 [US3] Update CoordinatorAgent with shopping list generation workflow
+- [X] T097 [US3] Add "recently purchased outside system" marking functionality (FR-021)
+- [X] T098 [US3] Update CoordinatorAgent with shopping list generation workflow
 - [X] T099 [P] [US3] Create ListGenerator component in frontend/src/components/shopping-lists/ListGenerator.tsx
 - [X] T100 [P] [US3] Create ListEditor component with add/remove/modify in frontend/src/components/shopping-lists/ListEditor.tsx
 - [X] T101 [US3] Implement shopping list API client in frontend/src/services/api/shoppingListApi.ts

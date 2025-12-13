@@ -201,6 +201,44 @@ public class FrequencyController : ControllerBase
     }
 
     /// <summary>
+    /// Mark product as recently purchased outside system (FR-021)
+    /// Updates last purchase date without creating receipt
+    /// </summary>
+    [HttpPost("{productId}/mark-purchased")]
+    public async Task<ActionResult<FrequencyCalculationResponse>> MarkAsPurchased(
+        Guid productId,
+        [FromBody] MarkPurchasedDto dto)
+    {
+        try
+        {
+            _logger.LogInformation("Marking product {ProductId} as purchased on {Date}", 
+                productId, dto.PurchaseDate);
+
+            var result = await _frequencyAgent.MarkPurchasedExternallyAsync(
+                productId, 
+                dto.PurchaseDate, 
+                CancellationToken.None);
+
+            if (!result.IsSuccess)
+            {
+                if (result.ErrorMessage?.Contains("not found") == true)
+                {
+                    return NotFound(new { error = result.ErrorMessage });
+                }
+
+                return BadRequest(new { error = result.ErrorMessage });
+            }
+
+            return Ok(result.Data);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error marking product as purchased");
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
     /// Get all available frequency options
     /// </summary>
     [HttpGet("options")]
@@ -258,4 +296,12 @@ public class FrequencyOptionDto
     public PurchaseFrequency Value { get; set; }
     public string Label { get; set; } = string.Empty;
     public int? DaysEstimate { get; set; }
+}
+
+/// <summary>
+/// DTO for marking product as purchased externally
+/// </summary>
+public class MarkPurchasedDto
+{
+    public DateTime PurchaseDate { get; set; }
 }

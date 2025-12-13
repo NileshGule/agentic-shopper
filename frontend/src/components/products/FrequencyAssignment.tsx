@@ -18,6 +18,7 @@ export interface FrequencyAssignmentProps {
   onFrequencyChange: (productId: string, frequency: PurchaseFrequency, isManual: boolean) => Promise<void>;
   onTogglePause: (productId: string, isPaused: boolean) => Promise<void>;
   onRecalculate?: (productId: string) => Promise<void>;
+  onMarkPurchased?: (productId: string, purchaseDate: Date) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -45,6 +46,7 @@ export const FrequencyAssignment: React.FC<FrequencyAssignmentProps> = ({
   onFrequencyChange,
   onTogglePause,
   onRecalculate,
+  onMarkPurchased,
   disabled = false
 }) => {
   const [selectedFrequency, setSelectedFrequency] = useState<PurchaseFrequency>(
@@ -52,6 +54,8 @@ export const FrequencyAssignment: React.FC<FrequencyAssignmentProps> = ({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isRecalculating, setIsRecalculating] = useState(false);
+  const [showMarkPurchased, setShowMarkPurchased] = useState(false);
+  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -102,7 +106,21 @@ export const FrequencyAssignment: React.FC<FrequencyAssignmentProps> = ({
       setIsRecalculating(false);
     }
   };
+  const handleMarkPurchased = async () => {
+    if (!onMarkPurchased) return;
 
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      await onMarkPurchased(productId, new Date(purchaseDate));
+      setShowMarkPurchased(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to mark as purchased');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const formatDate = (dateString?: string): string => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -183,6 +201,44 @@ export const FrequencyAssignment: React.FC<FrequencyAssignmentProps> = ({
           </button>
         </div>
       </div>
+
+      {onMarkPurchased && (
+        <div className="mark-purchased-section">
+          <button
+            onClick={() => setShowMarkPurchased(!showMarkPurchased)}
+            disabled={disabled || isLoading}
+            className="mark-purchased-toggle"
+          >
+            🛒 Mark as Purchased Externally
+          </button>
+
+          {showMarkPurchased && (
+            <div className="purchase-date-picker">
+              <input
+                type="date"
+                value={purchaseDate}
+                onChange={(e) => setPurchaseDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+                disabled={disabled || isLoading}
+              />
+              <button
+                onClick={handleMarkPurchased}
+                disabled={disabled || isLoading}
+                className="submit-purchase"
+              >
+                {isLoading ? 'Submitting...' : 'Submit'}
+              </button>
+              <button
+                onClick={() => setShowMarkPurchased(false)}
+                disabled={disabled || isLoading}
+                className="cancel-purchase"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="error-message">

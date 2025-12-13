@@ -122,5 +122,20 @@ export const frequencyApi = {
       `/api/frequency/history/${productId}`
     );
     return response.data;
+  },
+
+  /**
+   * Mark product as purchased outside system (FR-021)
+   * Updates last purchase date without creating a receipt
+   */
+  async markAsPurchasedExternally(
+    productId: string,
+    purchaseDate: Date
+  ): Promise<FrequencyCalculationResponse> {
+    const response = await api.post<FrequencyCalculationResponse>(
+      `/api/frequency/${productId}/mark-purchased`,
+      { purchaseDate: purchaseDate.toISOString() }
+    );
+    return response.data;
   }
 };

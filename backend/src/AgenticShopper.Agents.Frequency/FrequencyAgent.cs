@@ -378,6 +378,70 @@ public class FrequencyAgent : AgentBase
         }
     }
 
+    /// <summary>
+    /// Mark product as purchased outside system (FR-021)
+    /// Updates last purchase date without creating a receipt
+    /// </summary>
+    public async Task<AgentResult<FrequencyCalculationResponse>> MarkPurchasedExternallyAsync(
+        Guid productId,
+        DateTime purchaseDate,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var product = await _dbContext.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
+
+            if (product == null)
+            {
+                return AgentResult<FrequencyCalculationResponse>.Failure("Product not found");
+            }
+
+            // Update last purchase date
+            product.LastPurchased = purchaseDate;
+
+            // Recalculate frequency based on updated purchase history
+            var purchases = await _dbContext.Purchases
+                .Where(p => p.ProductId == productId)
+                .OrderBy(p => p.PurchaseDate)
+                .Select(p => p.PurchaseDate)
+                .ToListAsync(cancellationToken);
+
+            // Add the external purchase to the calculation
+            purchases.Add(purchaseDate);
+            purchases = purchases.OrderBy(d => d).ToList();
+
+            var result = _calculator.CalculateFrequency(purchases);
+
+            product.Frequency = result.Frequency;
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            Logger.LogInformation(
+                "Marked product {ProductName} as purchased externally on {Date}, recalculated frequency to {Frequency}",
+                product.Name, purchaseDate, result.Frequency);
+
+            return AgentResult<FrequencyCalculationResponse>.Success(new FrequencyCalculationResponse
+            {
+                ProductId = productId,
+                ProductName = product.Name,
+                Frequency = result.Frequency,
+                AverageDaysBetweenPurchases = result.AverageDaysBetweenPurchases,
+                PurchaseCount = result.PurchaseCount,
+                NextExpectedPurchase = result.NextExpectedPurchase,
+                Confidence = result.Confidence,
+                Reasoning = $"Marked as purchased externally on {purchaseDate:yyyy-MM-dd}, frequency recalculated based on {result.PurchaseCount} purchases",
+                WasUpdated = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error marking product as purchased externally");
+            return AgentResult<FrequencyCalculationResponse>.Failure($"Failed to mark as purchased: {ex.Message}");
+        }
+    }
+
     public override async Task ShutdownAsync(CancellationToken cancellationToken = default)
     {
         Logger.LogInformation("Shutting down FrequencyAgent");
