@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: agentic-shopper-postgres-prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agentic_shopper}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agentic-shopper-network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: agentic-shopper-redis-prod
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agentic-shopper-network
+    restart: unless-stopped
+
+  # Coordinator Service
+  coordinator:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.coordinator
+    image: agentic-shopper-coordinator:latest
+    container_name: agentic-shopper-coordinator
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=${POSTGRES_DB:-agentic_shopper};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD};Port=5432
+      - Redis__ConnectionString=redis:6379,password=${REDIS_PASSWORD:-}
+      - Redis__InstanceName=AgenticShopper:
+      - AzureStorage__ConnectionString=${AZURE_STORAGE_CONNECTION_STRING:?AZURE_STORAGE_CONNECTION_STRING required}
+      - AzureStorage__ContainerName=${AZURE_STORAGE_CONTAINER:-receipts}
+      - AzureDocumentIntelligence__Endpoint=${AZURE_DOC_INTELLIGENCE_ENDPOINT:-}
+      - AzureDocumentIntelligence__ApiKey=${AZURE_DOC_INTELLIGENCE_KEY:-}
+      - LLM__Provider=${LLM_PROVIDER:-FoundryLocal}
+      - LLM__Endpoint=${LLM_ENDPOINT:-http://localhost:8080}
+      - LLM__Model=${LLM_MODEL:-phi-3-mini}
+      - Cors__AllowedOrigins__0=${FRONTEND_URL:-http://localhost:3000}
+    ports:
+      - "${COORDINATOR_PORT:-5000}:80"
+    networks:
+      - agentic-shopper-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend (Optional - can be served separately)
+  frontend:
+    build:
+      context: ../../../frontend
+      dockerfile: Dockerfile
+    image: agentic-shopper-frontend:latest
+    container_name: agentic-shopper-frontend
+    depends_on:
+      - coordinator
+    environment:
+      - REACT_APP_API_URL=${API_URL:-http://localhost:5000}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    networks:
+      - agentic-shopper-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  agentic-shopper-network:
+    driver: bridge

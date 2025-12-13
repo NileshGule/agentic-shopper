@@ -1,0 +1,122 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+WORKDIR /src
+
+# Copy solution and project files
+COPY ["backend/AgenticShopper.sln", "backend/"]
+COPY ["backend/src/AgenticShopper.Core/AgenticShopper.Core.csproj", "backend/src/AgenticShopper.Core/"]
+COPY ["backend/src/AgenticShopper.Data/AgenticShopper.Data.csproj", "backend/src/AgenticShopper.Data/"]
+COPY ["backend/src/AgenticShopper.Agents.Receipt/AgenticShopper.Agents.Receipt.csproj", "backend/src/AgenticShopper.Agents.Receipt/"]
+COPY ["backend/src/AgenticShopper.Agents.Categorization/AgenticShopper.Agents.Categorization.csproj", "backend/src/AgenticShopper.Agents.Categorization/"]
+COPY ["backend/src/AgenticShopper.Agents.Frequency/AgenticShopper.Agents.Frequency.csproj", "backend/src/AgenticShopper.Agents.Frequency/"]
+COPY ["backend/src/AgenticShopper.Agents.ListGenerator/AgenticShopper.Agents.ListGenerator.csproj", "backend/src/AgenticShopper.Agents.ListGenerator/"]
+COPY ["backend/src/AgenticShopper.Agents.PriceComparison/AgenticShopper.Agents.PriceComparison.csproj", "backend/src/AgenticShopper.Agents.PriceComparison/"]
+COPY ["backend/src/AgenticShopper.Agents.Budget/AgenticShopper.Agents.Budget.csproj", "backend/src/AgenticShopper.Agents.Budget/"]
+
+# Restore dependencies for all agents
+RUN dotnet restore "backend/src/AgenticShopper.Agents.Receipt/AgenticShopper.Agents.Receipt.csproj"
+RUN dotnet restore "backend/src/AgenticShopper.Agents.Categorization/AgenticShopper.Agents.Categorization.csproj"
+RUN dotnet restore "backend/src/AgenticShopper.Agents.Frequency/AgenticShopper.Agents.Frequency.csproj"
+RUN dotnet restore "backend/src/AgenticShopper.Agents.ListGenerator/AgenticShopper.Agents.ListGenerator.csproj"
+RUN dotnet restore "backend/src/AgenticShopper.Agents.PriceComparison/AgenticShopper.Agents.PriceComparison.csproj"
+RUN dotnet restore "backend/src/AgenticShopper.Agents.Budget/AgenticShopper.Agents.Budget.csproj"
+
+# Copy all source code
+COPY backend/ backend/
+
+# Build and publish all agents to separate directories
+WORKDIR "/src/backend/src/AgenticShopper.Agents.Receipt"
+RUN dotnet publish "AgenticShopper.Agents.Receipt.csproj" -c Release -o /app/agents/receipt
+
+WORKDIR "/src/backend/src/AgenticShopper.Agents.Categorization"
+RUN dotnet publish "AgenticShopper.Agents.Categorization.csproj" -c Release -o /app/agents/categorization
+
+WORKDIR "/src/backend/src/AgenticShopper.Agents.Frequency"
+RUN dotnet publish "AgenticShopper.Agents.Frequency.csproj" -c Release -o /app/agents/frequency
+
+WORKDIR "/src/backend/src/AgenticShopper.Agents.ListGenerator"
+RUN dotnet publish "AgenticShopper.Agents.ListGenerator.csproj" -c Release -o /app/agents/listgenerator
+
+WORKDIR "/src/backend/src/AgenticShopper.Agents.PriceComparison"
+RUN dotnet publish "AgenticShopper.Agents.PriceComparison.csproj" -c Release -o /app/agents/pricecomparison
+
+WORKDIR "/src/backend/src/AgenticShopper.Agents.Budget"
+RUN dotnet publish "AgenticShopper.Agents.Budget.csproj" -c Release -o /app/agents/budget
+
+# Runtime stage - multi-agent container
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
+WORKDIR /app
+
+# Install supervisor for managing multiple processes
+RUN apk add --no-cache supervisor
+
+# Copy all published agents
+COPY --from=build /app/agents /app/agents
+
+# Create supervisor configuration
+RUN mkdir -p /etc/supervisor/conf.d /var/log/supervisor
+
+# Create supervisor config for all agents
+RUN echo '[supervisord]' > /etc/supervisor/supervisord.conf && \
+    echo 'nodaemon=true' >> /etc/supervisor/supervisord.conf && \
+    echo 'logfile=/var/log/supervisor/supervisord.log' >> /etc/supervisor/supervisord.conf && \
+    echo 'pidfile=/var/run/supervisord.pid' >> /etc/supervisor/supervisord.conf && \
+    echo '[include]' >> /etc/supervisor/supervisord.conf && \
+    echo 'files=/etc/supervisor/conf.d/*.conf' >> /etc/supervisor/supervisord.conf
+
+# Configure each agent as a supervised process
+RUN echo '[program:receipt-agent]' > /etc/supervisor/conf.d/receipt.conf && \
+    echo 'command=dotnet /app/agents/receipt/AgenticShopper.Agents.Receipt.dll' >> /etc/supervisor/conf.d/receipt.conf && \
+    echo 'directory=/app/agents/receipt' >> /etc/supervisor/conf.d/receipt.conf && \
+    echo 'autostart=true' >> /etc/supervisor/conf.d/receipt.conf && \
+    echo 'autorestart=true' >> /etc/supervisor/conf.d/receipt.conf && \
+    echo 'stderr_logfile=/var/log/supervisor/receipt-agent.err.log' >> /etc/supervisor/conf.d/receipt.conf && \
+    echo 'stdout_logfile=/var/log/supervisor/receipt-agent.out.log' >> /etc/supervisor/conf.d/receipt.conf
+
+RUN echo '[program:categorization-agent]' > /etc/supervisor/conf.d/categorization.conf && \
+    echo 'command=dotnet /app/agents/categorization/AgenticShopper.Agents.Categorization.dll' >> /etc/supervisor/conf.d/categorization.conf && \
+    echo 'directory=/app/agents/categorization' >> /etc/supervisor/conf.d/categorization.conf && \
+    echo 'autostart=true' >> /etc/supervisor/conf.d/categorization.conf && \
+    echo 'autorestart=true' >> /etc/supervisor/conf.d/categorization.conf && \
+    echo 'stderr_logfile=/var/log/supervisor/categorization-agent.err.log' >> /etc/supervisor/conf.d/categorization.conf && \
+    echo 'stdout_logfile=/var/log/supervisor/categorization-agent.out.log' >> /etc/supervisor/conf.d/categorization.conf
+
+RUN echo '[program:frequency-agent]' > /etc/supervisor/conf.d/frequency.conf && \
+    echo 'command=dotnet /app/agents/frequency/AgenticShopper.Agents.Frequency.dll' >> /etc/supervisor/conf.d/frequency.conf && \
+    echo 'directory=/app/agents/frequency' >> /etc/supervisor/conf.d/frequency.conf && \
+    echo 'autostart=true' >> /etc/supervisor/conf.d/frequency.conf && \
+    echo 'autorestart=true' >> /etc/supervisor/conf.d/frequency.conf && \
+    echo 'stderr_logfile=/var/log/supervisor/frequency-agent.err.log' >> /etc/supervisor/conf.d/frequency.conf && \
+    echo 'stdout_logfile=/var/log/supervisor/frequency-agent.out.log' >> /etc/supervisor/conf.d/frequency.conf
+
+RUN echo '[program:listgenerator-agent]' > /etc/supervisor/conf.d/listgenerator.conf && \
+    echo 'command=dotnet /app/agents/listgenerator/AgenticShopper.Agents.ListGenerator.dll' >> /etc/supervisor/conf.d/listgenerator.conf && \
+    echo 'directory=/app/agents/listgenerator' >> /etc/supervisor/conf.d/listgenerator.conf && \
+    echo 'autostart=true' >> /etc/supervisor/conf.d/listgenerator.conf && \
+    echo 'autorestart=true' >> /etc/supervisor/conf.d/listgenerator.conf && \
+    echo 'stderr_logfile=/var/log/supervisor/listgenerator-agent.err.log' >> /etc/supervisor/conf.d/listgenerator.conf && \
+    echo 'stdout_logfile=/var/log/supervisor/listgenerator-agent.out.log' >> /etc/supervisor/conf.d/listgenerator.conf
+
+RUN echo '[program:pricecomparison-agent]' > /etc/supervisor/conf.d/pricecomparison.conf && \
+    echo 'command=dotnet /app/agents/pricecomparison/AgenticShopper.Agents.PriceComparison.dll' >> /etc/supervisor/conf.d/pricecomparison.conf && \
+    echo 'directory=/app/agents/pricecomparison' >> /etc/supervisor/conf.d/pricecomparison.conf && \
+    echo 'autostart=true' >> /etc/supervisor/conf.d/pricecomparison.conf && \
+    echo 'autorestart=true' >> /etc/supervisor/conf.d/pricecomparison.conf && \
+    echo 'stderr_logfile=/var/log/supervisor/pricecomparison-agent.err.log' >> /etc/supervisor/conf.d/pricecomparison.conf && \
+    echo 'stdout_logfile=/var/log/supervisor/pricecomparison-agent.out.log' >> /etc/supervisor/conf.d/pricecomparison.conf
+
+RUN echo '[program:budget-agent]' > /etc/supervisor/conf.d/budget.conf && \
+    echo 'command=dotnet /app/agents/budget/AgenticShopper.Agents.Budget.dll' >> /etc/supervisor/conf.d/budget.conf && \
+    echo 'directory=/app/agents/budget' >> /etc/supervisor/conf.d/budget.conf && \
+    echo 'autostart=true' >> /etc/supervisor/conf.d/budget.conf && \
+    echo 'autorestart=true' >> /etc/supervisor/conf.d/budget.conf && \
+    echo 'stderr_logfile=/var/log/supervisor/budget-agent.err.log' >> /etc/supervisor/conf.d/budget.conf && \
+    echo 'stdout_logfile=/var/log/supervisor/budget-agent.out.log' >> /etc/supervisor/conf.d/budget.conf
+
+# Create non-root user
+RUN addgroup -g 1000 appuser && adduser -u 1000 -G appuser -s /bin/sh -D appuser
+RUN chown -R appuser:appuser /app /var/log/supervisor /var/run
+USER appuser
+
+# Entry point - run supervisor to manage all agents
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]

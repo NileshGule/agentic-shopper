@@ -24,7 +24,7 @@
 - [X] T002 Initialize .NET 10 solution file and configure project references in backend/
 - [X] T003 [P] Create frontend React 18 + TypeScript project with Vite in frontend/
 - [X] T004 [P] Configure ESLint, Prettier, and EditorConfig for code quality
-- [ ] T005 [P] Setup Docker Compose configuration in backend/deployment/docker/docker-compose.yml
+- [X] T005 [P] Setup Docker Compose configuration in backend/deployment/docker/docker-compose.yml
 - [X] T006 [P] Create .gitignore for .NET, React, and Docker artifacts
 - [ ] T007 Create repository structure per plan.md (backend/, frontend/, .github/, specs/)
 
@@ -59,8 +59,8 @@
 - [X] T028 [P] Setup SignalR hub infrastructure in backend/src/AgenticShopper.Coordinator/Hubs/ShoppingListHub.cs
 - [X] T029 [P] Configure Azure Blob Storage client in backend/src/AgenticShopper.Core/Services/BlobStorageService.cs
 - [X] T030 [P] Setup Redis caching configuration in backend/src/AgenticShopper.Coordinator/Program.cs
-- [ ] T031 [P] Create Dockerfile.coordinator in backend/deployment/docker/Dockerfile.coordinator
-- [ ] T032 [P] Create Dockerfile.agent for agent services in backend/deployment/docker/Dockerfile.agent
+- [X] T031 [P] Create Dockerfile.coordinator in backend/deployment/docker/Dockerfile.coordinator
+- [X] T032 [P] Create Dockerfile.agent for agent services in backend/deployment/docker/Dockerfile.agent
 - [X] T033 [P] Setup API routing structure in backend/src/AgenticShopper.Coordinator/Controllers/
 - [X] T034 [P] Configure Swagger/OpenAPI documentation in backend/src/AgenticShopper.Coordinator/Program.cs
 - [X] T035 Create React app structure with routing (React Router) in frontend/src/

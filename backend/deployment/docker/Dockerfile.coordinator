@@ -1,0 +1,46 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+WORKDIR /src
+
+# Copy solution and project files
+COPY ["backend/AgenticShopper.sln", "backend/"]
+COPY ["backend/src/AgenticShopper.Coordinator/AgenticShopper.Coordinator.csproj", "backend/src/AgenticShopper.Coordinator/"]
+COPY ["backend/src/AgenticShopper.Core/AgenticShopper.Core.csproj", "backend/src/AgenticShopper.Core/"]
+COPY ["backend/src/AgenticShopper.Data/AgenticShopper.Data.csproj", "backend/src/AgenticShopper.Data/"]
+COPY ["backend/src/AgenticShopper.Agents.Receipt/AgenticShopper.Agents.Receipt.csproj", "backend/src/AgenticShopper.Agents.Receipt/"]
+
+# Restore dependencies
+RUN dotnet restore "backend/src/AgenticShopper.Coordinator/AgenticShopper.Coordinator.csproj"
+
+# Copy all source code
+COPY backend/ backend/
+
+# Build and publish
+WORKDIR "/src/backend/src/AgenticShopper.Coordinator"
+RUN dotnet build "AgenticShopper.Coordinator.csproj" -c Release -o /app/build
+RUN dotnet publish "AgenticShopper.Coordinator.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
+WORKDIR /app
+
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
+# Copy published application
+COPY --from=build /app/publish .
+
+# Create non-root user
+RUN addgroup -g 1000 appuser && adduser -u 1000 -G appuser -s /bin/sh -D appuser
+RUN chown -R appuser:appuser /app
+USER appuser
+
+# Expose port
+EXPOSE 80
+
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:80/health || exit 1
+
+# Entry point
+ENTRYPOINT ["dotnet", "AgenticShopper.Coordinator.dll"]
