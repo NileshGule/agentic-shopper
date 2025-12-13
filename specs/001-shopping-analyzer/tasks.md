@@ -288,14 +288,14 @@
 
 ### Implementation for User Story 7
 
-- [ ] T169 [US7] Add Notes and Tags JSON fields to Product entity (already in data model)
-- [ ] T170 [US7] Implement note/tag save functionality in ProductRepository
-- [ ] T171 [US7] Add search/filter by tags and notes in ProductRepository query methods
-- [ ] T172 [US7] Create ProductController with notes/tags endpoints in backend/src/AgenticShopper.Coordinator/Controllers/ProductController.cs
-- [ ] T173 [US7] Implement tag-based product filtering logic
+- [X] T169 [US7] Add Notes and Tags JSON fields to Product entity (already in data model)
+- [X] T170 [US7] Implement note/tag save functionality in ProductRepository
+- [X] T171 [US7] Add search/filter by tags and notes in ProductRepository query methods
+- [X] T172 [US7] Create ProductController with notes/tags endpoints in backend/src/AgenticShopper.Coordinator/Controllers/ProductController.cs
+- [X] T173 [US7] Implement tag-based product filtering logic
 - [ ] T174 [US7] Add notes display in shopping list generation
 - [ ] T175 [P] [US7] Create ProductNotes component in frontend/src/components/products/ProductNotes.tsx
-- [ ] T176 [US7] Implement product API client in frontend/src/services/api/productApi.ts
+- [X] T176 [US7] Implement product API client in frontend/src/services/api/productApi.ts
 - [ ] T177 [US7] Add notes/tags editor in ProductsPage
 - [ ] T178 [US7] Implement tag autocomplete for common tags (organic, gluten-free, etc.)
 - [ ] T179 [US7] Add tag filtering UI with chip-based selection

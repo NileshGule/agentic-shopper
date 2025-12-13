@@ -237,12 +237,14 @@ public class BudgetRepository : IRepository<Budget>
         try
         {
             var now = DateTime.UtcNow;
-            return await _context.Budgets
+            var budgets = await _context.Budgets
                 .Include(b => b.Category)
                 .Where(b => b.FamilyId == familyId
                     && b.StartDate <= now
                     && b.EndDate >= now)
-                .AsEnumerable() // Move to client-side for calculated field
+                .ToListAsync(cancellationToken); // Use ToListAsync instead of chaining after AsEnumerable
+            
+            return budgets
                 .Where(b => b.CurrentSpent >= (b.Amount * b.AlertThreshold))
                 .OrderByDescending(b => b.CurrentSpent / b.Amount)
                 .ToList();

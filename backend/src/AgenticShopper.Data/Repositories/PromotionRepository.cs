@@ -132,6 +132,32 @@ public class PromotionRepository : IRepository<Promotion>
         }
     }
 
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving changes");
+            throw;
+        }
+    }
+
+    public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _context.Promotions.AnyAsync(p => p.Id == id, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking existence of promotion with ID {PromotionId}", id);
+            throw;
+        }
+    }
+
     /// <summary>
     /// Get active promotions (not expired)
     /// </summary>

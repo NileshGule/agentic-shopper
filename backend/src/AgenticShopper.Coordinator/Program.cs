@@ -42,6 +42,7 @@ try
     // Register repositories
     builder.Services.AddScoped<IRepository<Receipt>, ReceiptRepository>();
     builder.Services.AddScoped<IRepository<Product>, ProductRepository>();
+    builder.Services.AddScoped<ProductRepository>(); // For ProductController
 
     // Register services
     builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();

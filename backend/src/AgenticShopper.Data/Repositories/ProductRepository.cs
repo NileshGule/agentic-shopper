@@ -296,4 +296,152 @@ public class ProductRepository : IRepository<Product>
             throw;
         }
     }
+
+    /// <summary>
+    /// Update product notes and tags
+    /// </summary>
+    public async Task<Product> SaveNotesAndTagsAsync(
+        Guid productId,
+        string? notes,
+        string? tags,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var product = await _context.Products.FindAsync([productId], cancellationToken);
+            if (product == null)
+            {
+                _logger.LogWarning("Product with ID {ProductId} not found for notes/tags update", productId);
+                throw new InvalidOperationException($"Product with ID {productId} not found");
+            }
+
+            product.Notes = notes?.Trim();
+            product.Tags = tags;
+
+            await _context.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Updated notes/tags for product {ProductId}", productId);
+
+            return product;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating notes/tags for product {ProductId}", productId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Search products by note content
+    /// </summary>
+    public async Task<IEnumerable<Product>> SearchByNotesAsync(
+        string searchTerm,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+            return Enumerable.Empty<Product>();
+
+        try
+        {
+            return await _context.Products
+                .Include(p => p.Category)
+                .Where(p => p.Notes != null && EF.Functions.Like(p.Notes, $"%{searchTerm}%"))
+                .OrderBy(p => p.Name)
+                .ToListAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching products by notes with term {SearchTerm}", searchTerm);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Get products by tags (matches any tag in the provided list)
+    /// </summary>
+    public async Task<IEnumerable<Product>> GetByTagsAsync(
+        string[] tags,
+        CancellationToken cancellationToken = default)
+    {
+        if (tags == null || tags.Length == 0)
+            return Enumerable.Empty<Product>();
+
+        try
+        {
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Where(p => p.Tags != null)
+                .ToListAsync(cancellationToken);
+
+            // Filter in-memory for JSON array matching
+            return products.Where(p =>
+            {
+                if (string.IsNullOrWhiteSpace(p.Tags))
+                    return false;
+
+                try
+                {
+                    var productTags = System.Text.Json.JsonSerializer.Deserialize<string[]>(p.Tags);
+                    if (productTags == null)
+                        return false;
+
+                    return tags.Any(tag => productTags.Contains(tag, StringComparer.OrdinalIgnoreCase));
+                }
+                catch
+                {
+                    return false;
+                }
+            }).OrderBy(p => p.Name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting products by tags");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Get all unique tags across all products
+    /// </summary>
+    public async Task<IEnumerable<string>> GetAllTagsAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var products = await _context.Products
+                .Where(p => p.Tags != null)
+                .Select(p => p.Tags)
+                .ToListAsync(cancellationToken);
+
+            var allTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var tagsJson in products)
+            {
+                if (string.IsNullOrWhiteSpace(tagsJson))
+                    continue;
+
+                try
+                {
+                    var tags = System.Text.Json.JsonSerializer.Deserialize<string[]>(tagsJson);
+                    if (tags != null)
+                    {
+                        foreach (var tag in tags)
+                        {
+                            allTags.Add(tag);
+                        }
+                    }
+                }
+                catch
+                {
+                    // Skip invalid JSON
+                    continue;
+                }
+            }
+
+            return allTags.OrderBy(t => t);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all tags");
+            throw;
+        }
+    }
 }

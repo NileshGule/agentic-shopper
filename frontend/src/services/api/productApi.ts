@@ -133,18 +133,43 @@ export const productApi = {
   },
 
   /**
-   * Update product notes
+   * Update product notes and tags
    */
-  async updateProductNotes(productId: string, notes: string): Promise<Product> {
-    const response = await api.patch(`/products/${productId}/notes`, { notes });
+  async updateNotesAndTags(
+    productId: string,
+    notes?: string,
+    tags?: string[]
+  ): Promise<Product> {
+    const response = await api.put(`/product/${productId}/notes-tags`, {
+      notes,
+      tags,
+    });
     return response.data;
   },
 
   /**
-   * Update product tags
+   * Search products by note content
    */
-  async updateProductTags(productId: string, tags: string[]): Promise<Product> {
-    const response = await api.patch(`/products/${productId}/tags`, { tags });
+  async searchByNotes(query: string): Promise<Product[]> {
+    const response = await api.get('/product/search-by-notes', {
+      params: { query },
+    });
+    return response.data;
+  },
+
+  /**
+   * Filter products by tags
+   */
+  async filterByTags(tags: string[]): Promise<Product[]> {
+    const response = await api.post('/product/filter-by-tags', { tags });
+    return response.data;
+  },
+
+  /**
+   * Get all unique tags across products
+   */
+  async getAllTags(): Promise<string[]> {
+    const response = await api.get('/product/tags');
     return response.data;
   },
 };
