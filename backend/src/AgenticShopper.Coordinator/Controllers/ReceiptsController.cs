@@ -1,5 +1,6 @@
 using AgenticShopper.Agents.Receipt;
 using AgenticShopper.Agents.Frequency;
+using AgenticShopper.Agents.Budget;
 using AgenticShopper.Coordinator.DTOs;
 using AgenticShopper.Core.Interfaces;
 using AgenticShopper.Core.Models;
@@ -15,17 +16,20 @@ public class ReceiptsController : ControllerBase
     private readonly ReceiptAgent _receiptAgent;
     private readonly IRepository<Receipt> _receiptRepository;
     private readonly FrequencyAgent _frequencyAgent;
+    private readonly BudgetAgent? _budgetAgent;
 
     public ReceiptsController(
         ILogger<ReceiptsController> logger,
         ReceiptAgent receiptAgent,
         IRepository<Receipt> receiptRepository,
-        FrequencyAgent frequencyAgent)
+        FrequencyAgent frequencyAgent,
+        BudgetAgent? budgetAgent = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _receiptAgent = receiptAgent ?? throw new ArgumentNullException(nameof(receiptAgent));
         _receiptRepository = receiptRepository ?? throw new ArgumentNullException(nameof(receiptRepository));
         _frequencyAgent = frequencyAgent ?? throw new ArgumentNullException(nameof(frequencyAgent));
+        _budgetAgent = budgetAgent; // Optional for backward compatibility
     }
 
     /// <summary>
@@ -355,6 +359,32 @@ public class ReceiptsController : ControllerBase
             // This would involve updating existing purchases, adding new ones, and removing deleted ones
 
             await _receiptRepository.UpdateAsync(receipt, cancellationToken);
+
+            // Update budget tracking when receipt is verified (T141)
+            if (receipt.Status == ReceiptStatus.Verified && _budgetAgent != null && receipt.Purchases != null)
+            {
+                foreach (var purchase in receipt.Purchases)
+                {
+                    if (purchase.Product?.CategoryId != null)
+                    {
+                        try
+                        {
+                            await _budgetAgent.UpdateBudgetSpendingAsync(
+                                receipt.FamilyId,
+                                purchase.Product.CategoryId.Value,
+                                purchase.TotalPrice,
+                                cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log but don't fail the receipt update
+                            _logger.LogError(ex,
+                                "Error updating budget for category {CategoryId} after receipt verification",
+                                purchase.Product.CategoryId);
+                        }
+                    }
+                }
+            }
 
             _logger.LogInformation("Receipt {ReceiptId} updated successfully", id);
 

@@ -230,11 +230,11 @@
 - [X] T134 [US5] Implement SpendingAnalyzer in backend/src/AgenticShopper.Agents.Budget/Services/SpendingAnalyzer.cs
 - [X] T135 [US5] Implement BudgetAlertService in backend/src/AgenticShopper.Agents.Budget/Services/BudgetAlertService.cs
 - [X] T136 [US5] Create BudgetController with track/analytics endpoints in backend/src/AgenticShopper.Agents.Budget/Controllers/BudgetController.cs
-- [ ] T137 [US5] Implement spending trend calculation (weekly, monthly, quarterly) in SpendingAnalyzer
-- [ ] T138 [US5] Implement budget threshold checking (90% default) in BudgetAlertService
+- [X] T137 [US5] Implement spending trend calculation (weekly, monthly, quarterly) in SpendingAnalyzer
+- [X] T138 [US5] Implement budget threshold checking (90% default) in BudgetAlertService
 - [ ] T139 [US5] Add Azure Service Bus for async budget alert publishing
-- [ ] T140 [US5] Implement budget auto-reset on period end in BudgetAlertService
-- [ ] T141 [US5] Update purchase recording to trigger budget tracking
+- [X] T140 [US5] Implement budget auto-reset on period end in BudgetAlertService
+- [X] T141 [US5] Update purchase recording to trigger budget tracking
 - [ ] T142 [P] [US5] Create SpendingDashboard component with Chart.js in frontend/src/components/analytics/SpendingDashboard.tsx
 - [ ] T143 [P] [US5] Create BudgetTracker component in frontend/src/components/analytics/BudgetTracker.tsx
 - [ ] T144 [P] [US5] Create Charts component (bar, line, pie) in frontend/src/components/analytics/Charts.tsx
