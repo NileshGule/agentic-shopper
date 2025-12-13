@@ -486,8 +486,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Receipt upload and OCR processing
 - ✅ Product categorization with AI
 - ✅ Purchase frequency tracking
-- 🚧 Shopping list generation
-- 🚧 Basic price comparison
+- ✅ Shopping list generation
+- 🚧 Price comparison and promotions
 
 ### v1.1 (Planned)
 - Family account collaboration
@@ -509,6 +509,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Build Status**: 🟢 Passing (Backend) | 🟢 Passing (Frontend)
 
 **Recent Updates:**
+
+**Commit 2708077** (User Story 4 - T107-T109):
+- ✅ Promotion entity model with all required properties
+- ✅ EF Core indexes for NormalizedProductName+StoreName and CatalogWeek
+- ✅ PromotionRepository with comprehensive CRUD operations
+- ✅ Query methods: GetActivePromotionsAsync, GetByStoreAsync, SearchByProductNameAsync
+- ✅ Bulk operations: BulkAddAsync, DeleteExpiredPromotionsAsync
+- ✅ Support for weekly promotion refresh (FR-027)
+- ✅ 293 lines of repository code
+- ✅ User Story 4: 13% Complete (3/23 tasks)
 
 **Commit 22a1ac8** (User Story 3 - T097-T098 Completion):
 - ✅ External purchase marking implementation (FR-021)
@@ -551,8 +561,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Auto/manual visual indicators with emoji badges (🤖 vs 👤)
 
 **Implementation Progress**:
-- Tasks Completed: T001-T106 (106/489 tasks = 22%)
-- User Stories: 3 Complete ✅ | 0 In Progress 🚧 | 4 Planned 📋
+- Tasks Completed: T001-T109 (109/489 tasks = 22%)
+- User Stories: 3 Complete ✅ | 1 In Progress 🚧 (US4: 13%) | 3 Planned 📋
 - Backend Agents: 4/6 (Receipt ✅, Categorization ✅, Frequency ✅, ListGenerator ✅)
 - Frontend Pages: 3/6 (Receipts ✅, Products ✅, Shopping Lists ✅)
-- Lines of Code: ~18,600+ (backend + frontend)
+- Lines of Code: ~18,900+ (backend + frontend)
