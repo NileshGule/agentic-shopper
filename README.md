@@ -487,7 +487,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Product categorization with AI
 - ✅ Purchase frequency tracking
 - ✅ Shopping list generation
-- 🚧 Price comparison and promotions (30% complete)
+- 🚧 Price comparison and promotions (39% complete)
 
 ### v1.1 (Planned)
 - Family account collaboration
@@ -509,6 +509,24 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Build Status**: 🟢 Passing (Backend) | 🟢 Passing (Frontend)
 
 **Recent Updates:**
+
+**Commit 7041572** (User Story 4 - T114-T115):
+- ✅ PriceOptimizer service for savings calculation (258 lines)
+- ✅ CalculateOptimalStrategy for single-store vs split strategy analysis
+- ✅ Single-store totals (Coles-only vs Woolworths-only)
+- ✅ Split strategy with per-product store selection for maximum savings
+- ✅ $5 threshold for split recommendation (avoid minor savings with extra trip)
+- ✅ CalculateProductSavings for individual product price differences
+- ✅ CalculatePromotionSavings for total promotion benefits across all products
+- ✅ ProductPriceInfo, OptimalStrategy, ProductPurchase DTOs
+- ✅ PriceController with RESTful API endpoints (299 lines)
+- ✅ GET /api/v1/promotions/current (filtering, pagination, product search)
+- ✅ POST /api/v1/prices/compare (multi-product comparison)
+- ✅ POST /api/v1/promotions/refresh (manual catalog refresh)
+- ✅ Request/Response DTOs matching OpenAPI specification
+- ✅ Full error handling, logging, and status codes
+- ✅ 557 lines of optimizer + controller code
+- ✅ User Story 4: 39% Complete (9/23 tasks)
 
 **Commit 1a0778b** (User Story 4 - T110-T113):
 - ✅ PriceAgent implementation with price comparison orchestration (369 lines)
@@ -577,8 +595,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Auto/manual visual indicators with emoji badges (🤖 vs 👤)
 
 **Implementation Progress**:
-- Tasks Completed: T001-T113 (113/489 tasks = 23%)
-- User Stories: 3 Complete ✅ | 1 In Progress 🚧 (US4: 30%) | 3 Planned 📋
+- Tasks Completed: T001-T115 (115/489 tasks = 24%)
+- User Stories: 3 Complete ✅ | 1 In Progress 🚧 (US4: 39%) | 3 Planned 📋
 - Backend Agents: 5/6 (Receipt ✅, Categorization ✅, Frequency ✅, ListGenerator ✅, PriceComparison 🚧)
 - Frontend Pages: 3/6 (Receipts ✅, Products ✅, Shopping Lists ✅)
-- Lines of Code: ~19,700+ (backend + frontend)
+- Lines of Code: ~20,200+ (backend + frontend)
