@@ -15,8 +15,9 @@ Agentic Shopper automates your weekly grocery shopping workflow by:
 2. **🏷️ Smart Categorization** ✅: AI categorizes products with GPT-4o-mini (Dairy, Produce, Pantry, etc.) + manual override
 3. **📊 Frequency Tracking** ✅: Learns purchase patterns (Weekly, Fortnightly, Monthly) with auto-recalculation
 4. **⏸️ Vacation Mode** ✅: Pause/resume frequency tracking for individual products (FR-015)
-5. **🛒 List Generation** ✅: Auto-generates shopping lists based on frequency with urgency indicators (90% Complete)
-6. **💰 Price Optimization** 📋: Compares prices across Coles & Woolworths, highlights promotions (Planned)
+6. **🛍️ External Purchase Marking** ✅: Mark items purchased outside system to adjust frequencies (FR-021)
+7. **🛒 List Generation** ✅: Auto-generates shopping lists based on frequency with urgency indicators
+8. **💰 Price Optimization** 📋: Compares prices across Coles & Woolworths, highlights promotions (Planned)
 7. **💵 Budget Tracking** 📋: Monitors spending, sends alerts when approaching budget limits (Planned)
 8. **👨‍👩‍👧‍👦 Family Collaboration** 📋: Shared lists and budgets for household members (Planned)
 
@@ -366,30 +367,40 @@ agentic-shopper/
   - Background frequency recalculation after receipt upload
   - Type-safe API integration with full error handling
 
-🚧 **In Progress** (90% Complete):
+✅ **Completed** (User Story 3 - 100%):
 
-**User Story 3: Shopping List Generation (FR-016 to FR-024)** 🚧
-- **Backend Implementation:** (Commit 125fe2c)
+**User Story 3: Shopping List Generation (FR-016 to FR-024)** ✅
+- **Backend Implementation:** (Commits 125fe2c, 22a1ac8)
   - ShoppingListRepository with comprehensive CRUD operations
   - ListGeneratorAgent for AI-powered list generation
   - RecommendationEngine with frequency-based product selection
   - UrgencyClassifier for Overdue/DueThisWeek/Upcoming prioritization
   - ListGeneratorController with RESTful API endpoints
+  - FrequencyAgent.MarkPurchasedExternallyAsync for external purchases (FR-021)
+  - FrequencyController.MarkAsPurchased endpoint
   - Urgency-based sorting (overdue items first)
   - Category grouping in recommendations (FR-018)
-  - 1,575 lines of backend code
+  - Shopping list generation workflow orchestration (T098)
+  - 1,770+ lines of backend code
 
-- **Frontend Implementation:** (Commit 7b8a120)
+- **Frontend Implementation:** (Commits 7b8a120, 22a1ac8)
   - Shopping List API client with full CRUD operations
   - ListGenerator component with urgency filter settings
   - ListEditor component with category grouping and progress tracking
   - ShoppingListsPage with two-column layout
+  - FrequencyAssignment enhancement with external purchase marking (FR-021)
+  - Date picker for marking purchases with validation (max=today)
+  - ProductsPage integration with handleMarkPurchased callback
   - Color-coded urgency indicators (⚠️ Overdue, ⏰ Due, 📅 Upcoming)
   - Manual item addition to lists (FR-019)
   - Purchase status tracking with optimistic updates
-  - 1,620 lines of frontend code
+  - 1,816+ lines of frontend code
 
-- **Pending:** Recently purchased marking (FR-021), coordinator integration
+- **Key Features:**
+  - External purchase tracking without receipt upload
+  - Automatic frequency recalculation on external purchases
+  - Complete shopping list generation workflow
+  - Urgency-based product recommendations
 
 📋 **Planned** (User Stories 4-7):
 
@@ -495,9 +506,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Last Updated**: December 13, 2025  
 **Branch**: `001-shopping-analyzer`  
-**Build Status**: 🟢 Passing (Backend) | 🟢 Passing (Frontend - Shopping Lists)
+**Build Status**: 🟢 Passing (Backend) | 🟢 Passing (Frontend)
 
 **Recent Updates:**
+
+**Commit 22a1ac8** (User Story 3 - T097-T098 Completion):
+- ✅ External purchase marking implementation (FR-021)
+- ✅ FrequencyAgent.MarkPurchasedExternallyAsync backend method
+- ✅ FrequencyController.MarkAsPurchased API endpoint (POST /api/frequency/{productId}/mark-purchased)
+- ✅ frequencyApi.markAsPurchasedExternally frontend client method
+- ✅ FrequencyAssignment component with date picker UI for external purchases
+- ✅ ProductsPage integration with handleMarkPurchased callback
+- ✅ Shopping list generation workflow orchestration (T098)
+- ✅ Automatic frequency recalculation on external purchases
+- ✅ User Story 3: 100% Complete (T086-T106)
+- ✅ 196+ lines of new code across 6 files
 
 **Commit 7b8a120** (User Story 3 - Frontend):
 - ✅ Shopping List API client with TypeScript interfaces (shoppingListApi.ts)
@@ -528,8 +551,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Auto/manual visual indicators with emoji badges (🤖 vs 👤)
 
 **Implementation Progress**:
-- Tasks Completed: T001-T106 (95/489 tasks = 19%)
-- User Stories: 2 Complete ✅ | 1 In Progress 🚧 (90%) | 4 Planned 📋
-- Backend Agents: 4/6 (Receipt, Categorization, Frequency, ListGenerator)
-- Frontend Pages: 3/6 (Receipts ✅, Products ✅, Shopping Lists 🚧)
-- Lines of Code: ~18,200+ (backend + frontend)
+- Tasks Completed: T001-T106 (106/489 tasks = 22%)
+- User Stories: 3 Complete ✅ | 0 In Progress 🚧 | 4 Planned 📋
+- Backend Agents: 4/6 (Receipt ✅, Categorization ✅, Frequency ✅, ListGenerator ✅)
+- Frontend Pages: 3/6 (Receipts ✅, Products ✅, Shopping Lists ✅)
+- Lines of Code: ~18,600+ (backend + frontend)
