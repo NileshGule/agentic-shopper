@@ -73,6 +73,13 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ShoppingListItem>()
             .HasIndex(i => new { i.ListId, i.IsPurchased });
 
+        // Configure Promotion indexes
+        modelBuilder.Entity<Promotion>()
+            .HasIndex(p => new { p.NormalizedProductName, p.StoreName });
+
+        modelBuilder.Entity<Promotion>()
+            .HasIndex(p => p.CatalogWeek);
+
         // Seed predefined categories
         modelBuilder.Entity<Category>().HasData(
             new Category { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Name = "Dairy", Description = "Milk, cheese, yogurt, butter", IsCustom = false },

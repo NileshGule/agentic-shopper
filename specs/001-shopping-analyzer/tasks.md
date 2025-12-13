@@ -187,9 +187,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T107 [P] [US4] Create Promotion entity in backend/src/AgenticShopper.Core/Models/Promotion.cs
-- [ ] T108 [US4] Add Promotions table to EF Core migration
-- [ ] T109 [US4] Implement PromotionRepository in backend/src/AgenticShopper.Data/Repositories/PromotionRepository.cs
+- [X] T107 [P] [US4] Create Promotion entity in backend/src/AgenticShopper.Core/Models/Promotion.cs
+- [X] T108 [US4] Add Promotions table to EF Core migration
+- [X] T109 [US4] Implement PromotionRepository in backend/src/AgenticShopper.Data/Repositories/PromotionRepository.cs
 - [ ] T110 [US4] Implement PriceAgent in backend/src/AgenticShopper.Agents.PriceComparison/PriceAgent.cs
 - [ ] T111 [P] [US4] Implement ColesCatalogService in backend/src/AgenticShopper.Agents.PriceComparison/Services/ColesCatalogService.cs
 - [ ] T112 [P] [US4] Implement WoolworthsCatalogService in backend/src/AgenticShopper.Agents.PriceComparison/Services/WoolworthsCatalogService.cs
