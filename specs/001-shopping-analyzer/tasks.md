@@ -199,9 +199,9 @@
 - [ ] T116 [US4] Implement web scraping logic for Coles catalog in ColesCatalogService
 - [ ] T117 [US4] Implement web scraping logic for Woolworths catalog in WoolworthsCatalogService
 - [ ] T118 [US4] Add Redis caching for promotion data (7-day TTL) in catalog services
-- [ ] T119 [US4] Implement weekly promotion refresh background job (IHostedService) in backend/src/AgenticShopper.Agents.PriceComparison/Jobs/PromotionRefreshJob.cs
-- [ ] T120 [US4] Implement product name fuzzy matching for promotions in PriceAgent
-- [ ] T121 [US4] Add optimal shopping strategy calculation (FR-026) in PriceOptimizer
+- [X] T119 [US4] Implement weekly promotion refresh background job (IHostedService) in backend/src/AgenticShopper.Agents.PriceComparison/Jobs/PromotionRefreshJob.cs
+- [X] T120 [US4] Implement product name fuzzy matching for promotions in PriceAgent
+- [X] T121 [US4] Add optimal shopping strategy calculation (FR-026) in PriceOptimizer
 - [ ] T122 [US4] Update CoordinatorAgent to include price comparison in list generation
 - [ ] T123 [P] [US4] Create PriceComparison component in frontend/src/components/shopping-lists/PriceComparison.tsx
 - [ ] T124 [US4] Implement price API client in frontend/src/services/api/priceApi.ts
