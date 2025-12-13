@@ -128,9 +128,9 @@
 - [X] T071 [US2] Implement FrequencyCalculator algorithm (minimum 3 purchases) in backend/src/AgenticShopper.Agents.Frequency/Services/FrequencyCalculator.cs
 - [X] T072 [US2] Create FrequencyController with calculate/override endpoints in backend/src/AgenticShopper.Agents.Frequency/Controllers/FrequencyController.cs
 - [X] T073 [US2] Implement frequency pause functionality (FR-015) in FrequencyAgent
-- [ ] T074 [US2] Add product normalized name generation for matching in ProductRepository
-- [ ] T075 [US2] Update CoordinatorAgent to orchestrate categorization after receipt processing
-- [ ] T076 [US2] Update CoordinatorAgent to orchestrate frequency calculation after categorization
+- [X] T074 [US2] Add product normalized name generation for matching in ProductRepository
+- [X] T075 [US2] Update CoordinatorAgent to orchestrate categorization after receipt processing
+- [X] T076 [US2] Update CoordinatorAgent to orchestrate frequency calculation after categorization
 - [ ] T077 [P] [US2] Create ProductCategorization component in frontend/src/components/products/ProductCategorization.tsx
 - [ ] T078 [P] [US2] Create FrequencyAssignment component in frontend/src/components/products/FrequencyAssignment.tsx
 - [ ] T079 [US2] Implement categorization API client in frontend/src/services/api/categorizationApi.ts

@@ -235,4 +235,65 @@ public class ProductRepository : IRepository<Product>
             throw;
         }
     }
+
+    /// <summary>
+    /// Generate normalized product name for matching (lowercase, remove special chars, trim)
+    /// </summary>
+    public static string GenerateNormalizedName(string productName)
+    {
+        if (string.IsNullOrWhiteSpace(productName))
+            return string.Empty;
+
+        // Convert to lowercase
+        var normalized = productName.ToLowerInvariant();
+
+        // Remove common brand suffixes and packaging info
+        var commonSuffixes = new[] { " pk", " pack", " kg", " g", " ml", " l", " ea", " each" };
+        foreach (var suffix in commonSuffixes)
+        {
+            if (normalized.EndsWith(suffix))
+            {
+                normalized = normalized.Substring(0, normalized.Length - suffix.Length);
+            }
+        }
+
+        // Remove special characters except spaces
+        normalized = new string(normalized.Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)).ToArray());
+
+        // Replace multiple spaces with single space and trim
+        while (normalized.Contains("  "))
+        {
+            normalized = normalized.Replace("  ", " ");
+        }
+
+        return normalized.Trim();
+    }
+
+    /// <summary>
+    /// Find product by normalized name match
+    /// </summary>
+    public async Task<Product?> GetByNormalizedNameAsync(
+        string productName,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(productName))
+            return null;
+
+        try
+        {
+            var normalizedSearch = GenerateNormalizedName(productName);
+            
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .ToListAsync(cancellationToken);
+
+            return products.FirstOrDefault(p => 
+                GenerateNormalizedName(p.Name) == normalizedSearch);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving product by normalized name {ProductName}", productName);
+            throw;
+        }
+    }
 }

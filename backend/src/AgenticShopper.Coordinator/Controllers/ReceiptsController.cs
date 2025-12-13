@@ -118,6 +118,10 @@ public class ReceiptsController : ControllerBase
                 response.ReceiptId,
                 response.Status);
 
+            // TODO: Orchestrate post-processing (categorization and frequency calculation)
+            // This requires batch processing support in agents or async background jobs
+            // For now, categorization and frequency can be triggered via explicit API calls
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -381,3 +385,4 @@ public class ReceiptsController : ControllerBase
         }
     }
 }
+
