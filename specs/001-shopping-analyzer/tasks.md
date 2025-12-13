@@ -223,13 +223,13 @@
 
 ### Implementation for User Story 5
 
-- [ ] T130 [P] [US5] Create Budget entity in backend/src/AgenticShopper.Core/Models/Budget.cs
-- [ ] T131 [US5] Add Budgets table to EF Core migration
-- [ ] T132 [US5] Implement BudgetRepository in backend/src/AgenticShopper.Data/Repositories/BudgetRepository.cs
-- [ ] T133 [US5] Implement BudgetAgent in backend/src/AgenticShopper.Agents.Budget/BudgetAgent.cs
-- [ ] T134 [US5] Implement SpendingAnalyzer in backend/src/AgenticShopper.Agents.Budget/Services/SpendingAnalyzer.cs
-- [ ] T135 [US5] Implement BudgetAlertService in backend/src/AgenticShopper.Agents.Budget/Services/BudgetAlertService.cs
-- [ ] T136 [US5] Create BudgetController with track/analytics endpoints in backend/src/AgenticShopper.Agents.Budget/Controllers/BudgetController.cs
+- [X] T130 [P] [US5] Create Budget entity in backend/src/AgenticShopper.Core/Models/Budget.cs
+- [X] T131 [US5] Add Budgets table to EF Core migration
+- [X] T132 [US5] Implement BudgetRepository in backend/src/AgenticShopper.Data/Repositories/BudgetRepository.cs
+- [X] T133 [US5] Implement BudgetAgent in backend/src/AgenticShopper.Agents.Budget/BudgetAgent.cs
+- [X] T134 [US5] Implement SpendingAnalyzer in backend/src/AgenticShopper.Agents.Budget/Services/SpendingAnalyzer.cs
+- [X] T135 [US5] Implement BudgetAlertService in backend/src/AgenticShopper.Agents.Budget/Services/BudgetAlertService.cs
+- [X] T136 [US5] Create BudgetController with track/analytics endpoints in backend/src/AgenticShopper.Agents.Budget/Controllers/BudgetController.cs
 - [ ] T137 [US5] Implement spending trend calculation (weekly, monthly, quarterly) in SpendingAnalyzer
 - [ ] T138 [US5] Implement budget threshold checking (90% default) in BudgetAlertService
 - [ ] T139 [US5] Add Azure Service Bus for async budget alert publishing
