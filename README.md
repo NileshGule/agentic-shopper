@@ -487,7 +487,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Product categorization with AI
 - ✅ Purchase frequency tracking
 - ✅ Shopping list generation
-- 🚧 Price comparison and promotions
+- 🚧 Price comparison and promotions (30% complete)
 
 ### v1.1 (Planned)
 - Family account collaboration
@@ -509,6 +509,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Build Status**: 🟢 Passing (Backend) | 🟢 Passing (Frontend)
 
 **Recent Updates:**
+
+**Commit 1a0778b** (User Story 4 - T110-T113):
+- ✅ PriceAgent implementation with price comparison orchestration (369 lines)
+- ✅ Request/Response classes: PriceComparisonRequest, CurrentPromotionsRequest, PriceComparisonResponse
+- ✅ ComparePricesAsync for multi-product price comparison across stores
+- ✅ GetCurrentPromotionsAsync with filtering, pagination, and search
+- ✅ RefreshPromotionsAsync for weekly catalog updates from all stores
+- ✅ Split strategy calculation for optimal shopping (FR-026)
+- ✅ ColesCatalogService implementation (179 lines)
+- ✅ WoolworthsCatalogService implementation (179 lines)
+- ✅ IStoreCatalogService interface with FetchPromotionsAsync and SearchPromotionAsync
+- ✅ Mock promotion data for development (TODO: web scraping)
+- ✅ Fuzzy product name matching for promotion search
+- ✅ ISO week calculation for catalog week identifiers
+- ✅ 794 lines of price comparison infrastructure
+- ✅ User Story 4: 30% Complete (7/23 tasks)
 
 **Commit 2708077** (User Story 4 - T107-T109):
 - ✅ Promotion entity model with all required properties
@@ -561,8 +577,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Auto/manual visual indicators with emoji badges (🤖 vs 👤)
 
 **Implementation Progress**:
-- Tasks Completed: T001-T109 (109/489 tasks = 22%)
-- User Stories: 3 Complete ✅ | 1 In Progress 🚧 (US4: 13%) | 3 Planned 📋
-- Backend Agents: 4/6 (Receipt ✅, Categorization ✅, Frequency ✅, ListGenerator ✅)
+- Tasks Completed: T001-T113 (113/489 tasks = 23%)
+- User Stories: 3 Complete ✅ | 1 In Progress 🚧 (US4: 30%) | 3 Planned 📋
+- Backend Agents: 5/6 (Receipt ✅, Categorization ✅, Frequency ✅, ListGenerator ✅, PriceComparison 🚧)
 - Frontend Pages: 3/6 (Receipts ✅, Products ✅, Shopping Lists ✅)
-- Lines of Code: ~18,900+ (backend + frontend)
+- Lines of Code: ~19,700+ (backend + frontend)
