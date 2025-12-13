@@ -15,7 +15,7 @@ Agentic Shopper automates your weekly grocery shopping workflow by:
 2. **🏷️ Smart Categorization** ✅: AI categorizes products with GPT-4o-mini (Dairy, Produce, Pantry, etc.) + manual override
 3. **📊 Frequency Tracking** ✅: Learns purchase patterns (Weekly, Fortnightly, Monthly) with auto-recalculation
 4. **⏸️ Vacation Mode** ✅: Pause/resume frequency tracking for individual products (FR-015)
-5. **🛒 List Generation** 🚧: Auto-generates shopping lists based on frequency + household needs (In Progress)
+5. **🛒 List Generation** ✅: Auto-generates shopping lists based on frequency with urgency indicators (90% Complete)
 6. **💰 Price Optimization** 📋: Compares prices across Coles & Woolworths, highlights promotions (Planned)
 7. **💵 Budget Tracking** 📋: Monitors spending, sends alerts when approaching budget limits (Planned)
 8. **👨‍👩‍👧‍👦 Family Collaboration** 📋: Shared lists and budgets for household members (Planned)
@@ -366,15 +366,32 @@ agentic-shopper/
   - Background frequency recalculation after receipt upload
   - Type-safe API integration with full error handling
 
-🚧 **In Progress**:
-- User Story 3: Shopping List Generation (T086-T106)
+🚧 **In Progress** (90% Complete):
 
-📋 **Planned** (User Stories 3-7):
-- **User Story 3**: Shopping List Generation (FR-016 to FR-024)
-  - List Generator Agent with frequency-based recommendations
-  - Urgency indicators (overdue, due this week, upcoming)
-  - Manual item addition and modification
-  - Shopping list UI with editing capabilities
+**User Story 3: Shopping List Generation (FR-016 to FR-024)** 🚧
+- **Backend Implementation:** (Commit 125fe2c)
+  - ShoppingListRepository with comprehensive CRUD operations
+  - ListGeneratorAgent for AI-powered list generation
+  - RecommendationEngine with frequency-based product selection
+  - UrgencyClassifier for Overdue/DueThisWeek/Upcoming prioritization
+  - ListGeneratorController with RESTful API endpoints
+  - Urgency-based sorting (overdue items first)
+  - Category grouping in recommendations (FR-018)
+  - 1,575 lines of backend code
+
+- **Frontend Implementation:** (Commit 7b8a120)
+  - Shopping List API client with full CRUD operations
+  - ListGenerator component with urgency filter settings
+  - ListEditor component with category grouping and progress tracking
+  - ShoppingListsPage with two-column layout
+  - Color-coded urgency indicators (⚠️ Overdue, ⏰ Due, 📅 Upcoming)
+  - Manual item addition to lists (FR-019)
+  - Purchase status tracking with optimistic updates
+  - 1,620 lines of frontend code
+
+- **Pending:** Recently purchased marking (FR-021), coordinator integration
+
+📋 **Planned** (User Stories 4-7):
 
 - **User Story 4**: Price Comparison & Promotions (FR-025 to FR-032)
   - Price Comparison Agent with Coles/Woolworths integration
@@ -478,9 +495,30 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Last Updated**: December 13, 2025  
 **Branch**: `001-shopping-analyzer`  
-**Build Status**: 🟢 Passing (Backend) | � Passing (Frontend - New Components)
+**Build Status**: 🟢 Passing (Backend) | 🟢 Passing (Frontend - Shopping Lists)
 
-**Recent Updates (Commit 7c319b6)**:
+**Recent Updates:**
+
+**Commit 7b8a120** (User Story 3 - Frontend):
+- ✅ Shopping List API client with TypeScript interfaces (shoppingListApi.ts)
+- ✅ ListGenerator component with urgency filters and custom naming
+- ✅ ListEditor component with category grouping and progress tracking
+- ✅ ShoppingListsPage with two-column responsive layout
+- ✅ Color-coded urgency indicators (Overdue/DueThisWeek/Upcoming)
+- ✅ Manual item addition and purchase status tracking (FR-019)
+- ✅ Optimistic UI updates for better UX
+- ✅ 1,620 lines of production-ready TypeScript + CSS
+
+**Commit 125fe2c** (User Story 3 - Backend):
+- ✅ ShoppingListRepository with CRUD and custom queries
+- ✅ ListGeneratorAgent for AI-powered list generation
+- ✅ RecommendationEngine with frequency-based selection logic
+- ✅ UrgencyClassifier with ratio-based thresholds
+- ✅ ListGeneratorController with RESTful endpoints
+- ✅ Category grouping and urgency-based sorting (FR-018)
+- ✅ 1,575 lines of backend implementation
+
+**Commit 7c319b6** (User Story 2 - Frontend):
 - ✅ ProductsPage with search, filters, and product management (331 lines)
 - ✅ Product API client with 8 CRUD operations (143 lines)
 - ✅ Responsive CSS with mobile-first design (270 lines)
@@ -490,8 +528,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Auto/manual visual indicators with emoji badges (🤖 vs 👤)
 
 **Implementation Progress**:
-- Tasks Completed: T001-T085 (85/489 tasks = 17%)
-- User Stories Complete: 2/7 (29%)
-- Backend Agents: 3/6 (Receipt, Categorization, Frequency)
-- Frontend Pages: 2/6 (Receipts, Products)
-- Lines of Code: ~15,000+ (backend + frontend)
+- Tasks Completed: T001-T106 (95/489 tasks = 19%)
+- User Stories: 2 Complete ✅ | 1 In Progress 🚧 (90%) | 4 Planned 📋
+- Backend Agents: 4/6 (Receipt, Categorization, Frequency, ListGenerator)
+- Frontend Pages: 3/6 (Receipts ✅, Products ✅, Shopping Lists 🚧)
+- Lines of Code: ~18,200+ (backend + frontend)
