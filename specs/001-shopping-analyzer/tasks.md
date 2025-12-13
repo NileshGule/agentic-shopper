@@ -202,7 +202,7 @@
 - [X] T119 [US4] Implement weekly promotion refresh background job (IHostedService) in backend/src/AgenticShopper.Agents.PriceComparison/Jobs/PromotionRefreshJob.cs
 - [X] T120 [US4] Implement product name fuzzy matching for promotions in PriceAgent
 - [X] T121 [US4] Add optimal shopping strategy calculation (FR-026) in PriceOptimizer
-- [ ] T122 [US4] Update CoordinatorAgent to include price comparison in list generation
+- [X] T122 [US4] Update CoordinatorAgent to include price comparison in list generation
 - [X] T123 [P] [US4] Create PriceComparison component in frontend/src/components/shopping-lists/PriceComparison.tsx
 - [X] T124 [US4] Implement price API client in frontend/src/services/api/priceApi.ts
 - [X] T125 [US4] Add promotion indicators (badges, discount %) to ListEditor component
@@ -235,17 +235,17 @@
 - [ ] T139 [US5] Add Azure Service Bus for async budget alert publishing
 - [X] T140 [US5] Implement budget auto-reset on period end in BudgetAlertService
 - [X] T141 [US5] Update purchase recording to trigger budget tracking
-- [ ] T142 [P] [US5] Create SpendingDashboard component with Chart.js in frontend/src/components/analytics/SpendingDashboard.tsx
-- [ ] T143 [P] [US5] Create BudgetTracker component in frontend/src/components/analytics/BudgetTracker.tsx
-- [ ] T144 [P] [US5] Create Charts component (bar, line, pie) in frontend/src/components/analytics/Charts.tsx
-- [ ] T145 [US5] Implement budget API client in frontend/src/services/api/budgetApi.ts
-- [ ] T146 [US5] Create AnalyticsPage in frontend/src/pages/AnalyticsPage.tsx
-- [ ] T147 [US5] Add spending trend visualizations (line charts) in SpendingDashboard
-- [ ] T148 [US5] Add category spending breakdown (pie chart) in SpendingDashboard
-- [ ] T149 [US5] Add store spending distribution (bar chart) in SpendingDashboard
-- [ ] T150 [US5] Implement budget creation and editing in BudgetTracker
-- [ ] T151 [US5] Add budget alert notifications in UI
-- [ ] T152 [US5] Add budget progress bars with threshold indicators
+- [X] T142 [P] [US5] Create SpendingDashboard component with Chart.js in frontend/src/components/analytics/SpendingDashboard.tsx
+- [X] T143 [P] [US5] Create BudgetTracker component in frontend/src/components/analytics/BudgetTracker.tsx
+- [X] T144 [P] [US5] Create Charts component (bar, line, pie) in frontend/src/components/analytics/Charts.tsx
+- [X] T145 [US5] Implement budget API client in frontend/src/services/api/budgetApi.ts
+- [X] T146 [US5] Create AnalyticsPage in frontend/src/pages/AnalyticsPage.tsx
+- [X] T147 [US5] Add spending trend visualizations (line charts) in SpendingDashboard
+- [X] T148 [US5] Add category spending breakdown (pie chart) in SpendingDashboard
+- [X] T149 [US5] Add store spending distribution (bar chart) in SpendingDashboard
+- [X] T150 [US5] Implement budget creation and editing in BudgetTracker
+- [X] T151 [US5] Add budget alert notifications in UI
+- [X] T152 [US5] Add budget progress bars with threshold indicators
 
 **Checkpoint**: User Story 5 complete - Analytics dashboard and budget tracking functional
 
