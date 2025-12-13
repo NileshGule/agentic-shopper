@@ -517,4 +517,108 @@ public class ShoppingListRepository : IRepository<ShoppingList>
             throw;
         }
     }
+
+    /// <summary>
+    /// Share list with family members (T156)
+    /// </summary>
+    public async Task<ShoppingList> ShareWithUsersAsync(
+        Guid listId,
+        List<Guid> userIds,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var list = await _context.ShoppingLists.FindAsync([listId], cancellationToken);
+            
+            if (list == null)
+            {
+                throw new InvalidOperationException($"Shopping list with ID {listId} not found");
+            }
+
+            // Store as JSON array
+            list.SharedWith = System.Text.Json.JsonSerializer.Serialize(userIds);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Shared list {ListId} with {Count} users", listId, userIds.Count);
+            return list;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sharing list {ListId}", listId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Check if user has access to list (T156)
+    /// </summary>
+    public async Task<bool> CanAccessListAsync(
+        Guid listId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var list = await _context.ShoppingLists.FindAsync([listId], cancellationToken);
+            
+            if (list == null)
+            {
+                return false;
+            }
+
+            // Creator always has access
+            if (list.CreatedBy == userId)
+            {
+                return true;
+            }
+
+            // Check SharedWith list
+            if (!string.IsNullOrEmpty(list.SharedWith))
+            {
+                var sharedUserIds = System.Text.Json.JsonSerializer
+                    .Deserialize<List<Guid>>(list.SharedWith) ?? new List<Guid>();
+                
+                return sharedUserIds.Contains(userId);
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking access for list {ListId} and user {UserId}", 
+                listId, userId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Get shared users for a list (T156)
+    /// </summary>
+    public async Task<List<Guid>> GetSharedUsersAsync(
+        Guid listId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var list = await _context.ShoppingLists.FindAsync([listId], cancellationToken);
+            
+            if (list == null)
+            {
+                throw new InvalidOperationException($"Shopping list with ID {listId} not found");
+            }
+
+            if (string.IsNullOrEmpty(list.SharedWith))
+            {
+                return new List<Guid>();
+            }
+
+            return System.Text.Json.JsonSerializer
+                .Deserialize<List<Guid>>(list.SharedWith) ?? new List<Guid>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting shared users for list {ListId}", listId);
+            throw;
+        }
+    }
 }

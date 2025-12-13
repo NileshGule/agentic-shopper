@@ -261,8 +261,8 @@
 
 - [X] T153 [US6] Add SharedWith JSON field to ShoppingList entity
 - [X] T154 [US6] Implement list archival status tracking in ShoppingListRepository
-- [ ] T155 [US6] Update ShoppingListHub for real-time collaboration in backend/src/AgenticShopper.Coordinator/Hubs/ShoppingListHub.cs
-- [ ] T156 [US6] Implement list sharing logic with family member access control
+- [X] T155 [US6] Update ShoppingListHub for real-time collaboration in backend/src/AgenticShopper.Coordinator/Hubs/ShoppingListHub.cs
+- [X] T156 [US6] Implement list sharing logic with family member access control
 - [X] T157 [US6] Add item purchase marking (IsPurchased flag) in ShoppingListItem
 - [X] T158 [US6] Implement list copy functionality in ShoppingListRepository
 - [X] T159 [US6] Add list archival and restoration endpoints in CoordinatorAgent
@@ -274,7 +274,7 @@
 - [X] T165 [US6] Implement purchase marking checkbox in list items
 - [X] T166 [US6] Add visual indication of completed items (strikethrough, dim)
 - [ ] T167 [US6] Implement list archival UI with archive/restore buttons
-- [ ] T168 [US6] Add concurrent edit conflict resolution (last-write-wins)
+- [X] T168 [US6] Add concurrent edit conflict resolution (last-write-wins)
 
 **Checkpoint**: User Story 6 complete - Multi-list management and collaboration working
 
