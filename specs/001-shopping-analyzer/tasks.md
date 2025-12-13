@@ -194,8 +194,8 @@
 - [X] T111 [P] [US4] Implement ColesCatalogService in backend/src/AgenticShopper.Agents.PriceComparison/Services/ColesCatalogService.cs
 - [X] T112 [P] [US4] Implement WoolworthsCatalogService in backend/src/AgenticShopper.Agents.PriceComparison/Services/WoolworthsCatalogService.cs
 - [X] T113 [US4] Implement IStoreCatalogService interface in backend/src/AgenticShopper.Agents.PriceComparison/Interfaces/IStoreCatalogService.cs
-- [ ] T114 [US4] Implement PriceOptimizer for savings calculation in backend/src/AgenticShopper.Agents.PriceComparison/Services/PriceOptimizer.cs
-- [ ] T115 [US4] Create PriceController with promotions/compare endpoints in backend/src/AgenticShopper.Agents.PriceComparison/Controllers/PriceController.cs
+- [X] T114 [US4] Implement PriceOptimizer for savings calculation in backend/src/AgenticShopper.Agents.PriceComparison/Services/PriceOptimizer.cs
+- [X] T115 [US4] Create PriceController with promotions/compare endpoints in backend/src/AgenticShopper.Agents.PriceComparison/Controllers/PriceController.cs
 - [ ] T116 [US4] Implement web scraping logic for Coles catalog in ColesCatalogService
 - [ ] T117 [US4] Implement web scraping logic for Woolworths catalog in WoolworthsCatalogService
 - [ ] T118 [US4] Add Redis caching for promotion data (7-day TTL) in catalog services
