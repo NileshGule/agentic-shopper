@@ -153,17 +153,17 @@
 
 ### Implementation for User Story 3
 
-- [ ] T086 [P] [US3] Create ShoppingList entity in backend/src/AgenticShopper.Core/Models/ShoppingList.cs
-- [ ] T087 [P] [US3] Create ShoppingListItem entity in backend/src/AgenticShopper.Core/Models/ShoppingListItem.cs
-- [ ] T088 [US3] Add ShoppingLists and ShoppingListItems tables to EF Core migration
-- [ ] T089 [US3] Implement ShoppingListRepository in backend/src/AgenticShopper.Data/Repositories/ShoppingListRepository.cs
-- [ ] T090 [US3] Implement ListGeneratorAgent in backend/src/AgenticShopper.Agents.ListGenerator/ListGeneratorAgent.cs
-- [ ] T091 [US3] Implement RecommendationEngine in backend/src/AgenticShopper.Agents.ListGenerator/Services/RecommendationEngine.cs
-- [ ] T092 [US3] Implement UrgencyClassifier (Overdue, DueThisWeek, Upcoming) in backend/src/AgenticShopper.Agents.ListGenerator/Services/UrgencyClassifier.cs
-- [ ] T093 [US3] Create ListGeneratorController with generate endpoint in backend/src/AgenticShopper.Agents.ListGenerator/Controllers/ListGeneratorController.cs
-- [ ] T094 [US3] Implement frequency-based item selection logic in RecommendationEngine
-- [ ] T095 [US3] Add category grouping for shopping list items (FR-018) in RecommendationEngine
-- [ ] T096 [US3] Implement urgency-based sorting (overdue first) in list generation
+- [X] T086 [P] [US3] Create ShoppingList entity in backend/src/AgenticShopper.Core/Models/ShoppingList.cs
+- [X] T087 [P] [US3] Create ShoppingListItem entity in backend/src/AgenticShopper.Core/Models/ShoppingListItem.cs
+- [X] T088 [US3] Add ShoppingLists and ShoppingListItems tables to EF Core migration
+- [X] T089 [US3] Implement ShoppingListRepository in backend/src/AgenticShopper.Data/Repositories/ShoppingListRepository.cs
+- [X] T090 [US3] Implement ListGeneratorAgent in backend/src/AgenticShopper.Agents.ListGenerator/ListGeneratorAgent.cs
+- [X] T091 [US3] Implement RecommendationEngine in backend/src/AgenticShopper.Agents.ListGenerator/Services/RecommendationEngine.cs
+- [X] T092 [US3] Implement UrgencyClassifier (Overdue, DueThisWeek, Upcoming) in backend/src/AgenticShopper.Agents.ListGenerator/Services/UrgencyClassifier.cs
+- [X] T093 [US3] Create ListGeneratorController with generate endpoint in backend/src/AgenticShopper.Agents.ListGenerator/Controllers/ListGeneratorController.cs
+- [X] T094 [US3] Implement frequency-based item selection logic in RecommendationEngine
+- [X] T095 [US3] Add category grouping for shopping list items (FR-018) in RecommendationEngine
+- [X] T096 [US3] Implement urgency-based sorting (overdue first) in list generation
 - [ ] T097 [US3] Add "recently purchased outside system" marking functionality (FR-021)
 - [ ] T098 [US3] Update CoordinatorAgent with shopping list generation workflow
 - [ ] T099 [P] [US3] Create ListGenerator component in frontend/src/components/shopping-lists/ListGenerator.tsx
