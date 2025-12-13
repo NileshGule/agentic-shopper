@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: agentic-shopper-postgres
+    environment:
+      POSTGRES_DB: agentic_shopper
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agentic-shopper-network
+
+  # Azurite - Azure Storage Emulator (Blob, Queue, Table)
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: agentic-shopper-azurite
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0"
+    ports:
+      - "10000:10000"  # Blob service
+      - "10001:10001"  # Queue service
+      - "10002:10002"  # Table service
+    volumes:
+      - azurite_data:/data
+    networks:
+      - agentic-shopper-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: agentic-shopper-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agentic-shopper-network
+
+  # RabbitMQ - Service Bus Alternative (AMQP protocol)
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: agentic-shopper-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"   # AMQP protocol
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agentic-shopper-network
+
+  # Apache Kafka - Event Hub Alternative (for streaming scenarios)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: agentic-shopper-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    networks:
+      - agentic-shopper-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: agentic-shopper-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - agentic-shopper-network
+
+  # PaddleOCR Service (optional - if you want to run OCR in a container)
+  # Uncomment if you want containerized OCR instead of local installation
+  # paddleocr:
+  #   image: paddlepaddle/paddle:2.5.1
+  #   container_name: agentic-shopper-paddleocr
+  #   volumes:
+  #     - ./receipts:/receipts
+  #   command: tail -f /dev/null
+  #   networks:
+  #     - agentic-shopper-network
+
+volumes:
+  postgres_data:
+  azurite_data:
+  redis_data:
+  rabbitmq_data:
+  zookeeper_data:
+  zookeeper_logs:
+  kafka_data:
+
+networks:
+  agentic-shopper-network:
+    driver: bridge

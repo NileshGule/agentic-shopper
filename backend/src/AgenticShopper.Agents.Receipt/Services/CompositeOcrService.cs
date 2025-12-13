@@ -6,6 +6,7 @@ namespace AgenticShopper.Agents.Receipt.Services;
 
 /// <summary>
 /// Composite OCR service that tries Azure Document Intelligence first, falls back to PaddleOCR
+/// In development mode with OCR:PreferredProvider=PaddleOCR, uses PaddleOCR first for cost savings
 /// </summary>
 public class CompositeOcrService : IOcrService
 {
@@ -13,7 +14,7 @@ public class CompositeOcrService : IOcrService
     private readonly IConfiguration _configuration;
     private readonly List<IOcrService> _ocrServices;
 
-    public string ProviderName => "Composite (Azure → PaddleOCR)";
+    public string ProviderName => "Composite (Configurable Priority)";
 
     public CompositeOcrService(
         ILogger<CompositeOcrService> logger,
@@ -25,27 +26,54 @@ public class CompositeOcrService : IOcrService
         // Initialize OCR providers in priority order
         _ocrServices = new List<IOcrService>();
 
+        var preferredProvider = _configuration["OCR:PreferredProvider"];
+        var usePaddleOCR = _configuration.GetValue<bool>("AzureDocumentIntelligence:UsePaddleOCR");
+
         // Add Azure Document Intelligence if configured
         var azureEndpoint = _configuration["AzureDocumentIntelligence:Endpoint"];
         var azureKey = _configuration["AzureDocumentIntelligence:ApiKey"];
 
-        if (!string.IsNullOrEmpty(azureEndpoint) && !string.IsNullOrEmpty(azureKey))
+        // In development, prefer PaddleOCR to save costs
+        if (preferredProvider == "PaddleOCR" || usePaddleOCR)
         {
-            _ocrServices.Add(new AzureDocumentIntelligenceOcrService(
-                logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<AzureDocumentIntelligenceOcrService>(),
+            _logger.LogInformation("Development mode: Using PaddleOCR as primary provider for cost savings");
+            
+            // Add PaddleOCR first
+            _ocrServices.Add(new PaddleOcrService(
+                logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<PaddleOcrService>(),
                 configuration: _configuration));
-            _logger.LogInformation("Azure Document Intelligence OCR provider configured");
+            _logger.LogInformation("PaddleOCR provider configured as primary");
+
+            // Add Azure as fallback if configured
+            if (!string.IsNullOrEmpty(azureEndpoint) && !string.IsNullOrEmpty(azureKey))
+            {
+                _ocrServices.Add(new AzureDocumentIntelligenceOcrService(
+                    logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<AzureDocumentIntelligenceOcrService>(),
+                    configuration: _configuration));
+                _logger.LogInformation("Azure Document Intelligence OCR provider configured as fallback");
+            }
         }
         else
         {
-            _logger.LogWarning("Azure Document Intelligence not configured, will use PaddleOCR only");
-        }
+            // Production mode: Use Azure first
+            if (!string.IsNullOrEmpty(azureEndpoint) && !string.IsNullOrEmpty(azureKey))
+            {
+                _ocrServices.Add(new AzureDocumentIntelligenceOcrService(
+                    logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<AzureDocumentIntelligenceOcrService>(),
+                    configuration: _configuration));
+                _logger.LogInformation("Azure Document Intelligence OCR provider configured as primary");
+            }
+            else
+            {
+                _logger.LogWarning("Azure Document Intelligence not configured, will use PaddleOCR only");
+            }
 
-        // Always add PaddleOCR as fallback
-        _ocrServices.Add(new PaddleOcrService(
-            logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<PaddleOcrService>(),
-            configuration: _configuration));
-        _logger.LogInformation("PaddleOCR provider configured as fallback");
+            // Always add PaddleOCR as fallback
+            _ocrServices.Add(new PaddleOcrService(
+                logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<PaddleOcrService>(),
+                configuration: _configuration));
+            _logger.LogInformation("PaddleOCR provider configured as fallback");
+        }
     }
 
     public async Task<OcrResult> ExtractReceiptDataAsync(

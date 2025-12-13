@@ -157,7 +157,35 @@ Frontend runs at: `http://localhost:3000`
 
 ---
 
-## 🐳 Docker Deployment
+## � Local Development (Cost-Free Alternative to Azure)
+
+**Save $116-510/month** by using local Docker containers instead of Azure services during development!
+
+### Quick Start
+```bash
+# Start all local services (PostgreSQL, Azurite, Redis, RabbitMQ, Kafka)
+./start-dev.ps1   # Windows
+./start-dev.sh    # macOS/Linux
+
+# Or manually
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+**Local Services:**
+- ✅ **Azurite** (Azure Storage) - `localhost:10000`
+- ✅ **PostgreSQL** - `localhost:5432`
+- ✅ **Redis** (Caching) - `localhost:6379`
+- ✅ **RabbitMQ** (Service Bus) - `localhost:5672` | UI: `localhost:15672`
+- ✅ **Kafka** (Event Hubs) - `localhost:9092`
+- ✅ **PaddleOCR** (Document Intelligence) - Free OCR alternative
+
+**Configuration:** Uses `appsettings.Development.json` with local endpoints automatically.
+
+📖 **Full Guide:** See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed setup, troubleshooting, and Azure migration path.
+
+---
+
+## �🐳 Docker Deployment
 
 ### Using Docker Compose (Recommended for Local)
 
