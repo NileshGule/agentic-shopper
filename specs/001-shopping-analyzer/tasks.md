@@ -190,10 +190,10 @@
 - [X] T107 [P] [US4] Create Promotion entity in backend/src/AgenticShopper.Core/Models/Promotion.cs
 - [X] T108 [US4] Add Promotions table to EF Core migration
 - [X] T109 [US4] Implement PromotionRepository in backend/src/AgenticShopper.Data/Repositories/PromotionRepository.cs
-- [ ] T110 [US4] Implement PriceAgent in backend/src/AgenticShopper.Agents.PriceComparison/PriceAgent.cs
-- [ ] T111 [P] [US4] Implement ColesCatalogService in backend/src/AgenticShopper.Agents.PriceComparison/Services/ColesCatalogService.cs
-- [ ] T112 [P] [US4] Implement WoolworthsCatalogService in backend/src/AgenticShopper.Agents.PriceComparison/Services/WoolworthsCatalogService.cs
-- [ ] T113 [US4] Implement IStoreCatalogService interface in backend/src/AgenticShopper.Agents.PriceComparison/Interfaces/IStoreCatalogService.cs
+- [X] T110 [US4] Implement PriceAgent in backend/src/AgenticShopper.Agents.PriceComparison/PriceAgent.cs
+- [X] T111 [P] [US4] Implement ColesCatalogService in backend/src/AgenticShopper.Agents.PriceComparison/Services/ColesCatalogService.cs
+- [X] T112 [P] [US4] Implement WoolworthsCatalogService in backend/src/AgenticShopper.Agents.PriceComparison/Services/WoolworthsCatalogService.cs
+- [X] T113 [US4] Implement IStoreCatalogService interface in backend/src/AgenticShopper.Agents.PriceComparison/Interfaces/IStoreCatalogService.cs
 - [ ] T114 [US4] Implement PriceOptimizer for savings calculation in backend/src/AgenticShopper.Agents.PriceComparison/Services/PriceOptimizer.cs
 - [ ] T115 [US4] Create PriceController with promotions/compare endpoints in backend/src/AgenticShopper.Agents.PriceComparison/Controllers/PriceController.cs
 - [ ] T116 [US4] Implement web scraping logic for Coles catalog in ColesCatalogService
