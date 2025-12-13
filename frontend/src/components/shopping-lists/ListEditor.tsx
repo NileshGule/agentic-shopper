@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingList, ShoppingListItem, ItemUrgency, AddItemRequest } from '../../services/api/shoppingListApi';
+import priceApi, { PromotionDto } from '../../services/api/priceApi';
 import './ListEditor.css';
 
 export interface ListEditorProps {
@@ -35,10 +36,75 @@ export const ListEditor: React.FC<ListEditorProps> = ({
   const [items, setItems] = useState<ShoppingListItem[]>(list.items || []);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [promotions, setPromotions] = useState<Map<string, PromotionDto>>(new Map());
 
   useEffect(() => {
     setItems(list.items || []);
+    loadPromotions();
   }, [list.items]);
+
+  const loadPromotions = async () => {
+    try {
+      const productNames = items
+        .map(item => item.product?.name)
+        .filter((name): name is string => name !== undefined);
+
+      if (productNames.length === 0) return;
+
+      // Fetch promotions for all products
+      const allPromotions = await priceApi.getCurrentPromotions({
+        pageSize: 100, // Get more promotions
+      });
+
+      // Create a map of product name to best promotion
+      const promoMap = new Map<string, PromotionDto>();
+      
+      productNames.forEach(productName => {
+        // Find promotions matching this product (case-insensitive)
+        const matching = allPromotions.promotions.filter(p => 
+          p.productName.toLowerCase().includes(productName.toLowerCase()) ||
+          productName.toLowerCase().includes(p.productName.toLowerCase())
+        );
+
+        if (matching.length > 0) {
+          // Get the best promotion (highest discount)
+          const bestPromo = matching.reduce((best, current) => 
+            current.discountPercentage > best.discountPercentage ? current : best
+          );
+          promoMap.set(productName, bestPromo);
+        }
+      });
+
+      setPromotions(promoMap);
+    } catch (err) {
+      console.error('Failed to load promotions:', err);
+      // Don't show error to user, promotions are optional
+    }
+  };
+
+  const getPromotion = (productName?: string): PromotionDto | undefined => {
+    if (!productName) return undefined;
+    return promotions.get(productName);
+  };
+
+  const formatExpiryDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = date.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return 'Expired';
+    } else if (diffDays === 0) {
+      return 'Expires today';
+    } else if (diffDays === 1) {
+      return 'Expires tomorrow';
+    } else if (diffDays <= 7) {
+      return `Expires in ${diffDays} days`;
+    } else {
+      return `Until ${date.toLocaleDateString()}`;
+    }
+  };
 
   const getUrgencyColor = (urgency: ItemUrgency): string => {
     switch (urgency) {
@@ -246,6 +312,22 @@ export const ListEditor: React.FC<ListEditorProps> = ({
                         {item.source === 'Manual' && (
                           <span className="source-badge">Manual</span>
                         )}
+                        {(() => {
+                          const promo = getPromotion(item.product?.name);
+                          if (promo) {
+                            return (
+                              <>
+                                <span className="promo-badge" title={`${promo.storeName} promotion`}>
+                                  🏷️ {Math.round(promo.discountPercentage)}% OFF at {promo.storeName}
+                                </span>
+                                <span className="promo-expiry" title="Promotion expires">
+                                  ⏳ {formatExpiryDate(promo.endDate)}
+                                </span>
+                              </>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
                   </div>
