@@ -259,20 +259,20 @@
 
 ### Implementation for User Story 6
 
-- [ ] T153 [US6] Add SharedWith JSON field to ShoppingList entity
-- [ ] T154 [US6] Implement list archival status tracking in ShoppingListRepository
+- [X] T153 [US6] Add SharedWith JSON field to ShoppingList entity
+- [X] T154 [US6] Implement list archival status tracking in ShoppingListRepository
 - [ ] T155 [US6] Update ShoppingListHub for real-time collaboration in backend/src/AgenticShopper.Coordinator/Hubs/ShoppingListHub.cs
 - [ ] T156 [US6] Implement list sharing logic with family member access control
-- [ ] T157 [US6] Add item purchase marking (IsPurchased flag) in ShoppingListItem
-- [ ] T158 [US6] Implement list copy functionality in ShoppingListRepository
-- [ ] T159 [US6] Add list archival and restoration endpoints in CoordinatorAgent
+- [X] T157 [US6] Add item purchase marking (IsPurchased flag) in ShoppingListItem
+- [X] T158 [US6] Implement list copy functionality in ShoppingListRepository
+- [X] T159 [US6] Add list archival and restoration endpoints in CoordinatorAgent
 - [ ] T160 [P] [US6] Create ListSharing component in frontend/src/components/shopping-lists/ListSharing.tsx
 - [ ] T161 [US6] Update ListEditor with real-time sync via SignalR
 - [ ] T162 [US6] Add multi-list management UI in ShoppingListsPage
 - [ ] T163 [US6] Implement list naming and creation modal
 - [ ] T164 [US6] Add item reordering (drag-and-drop) in ListEditor
-- [ ] T165 [US6] Implement purchase marking checkbox in list items
-- [ ] T166 [US6] Add visual indication of completed items (strikethrough, dim)
+- [X] T165 [US6] Implement purchase marking checkbox in list items
+- [X] T166 [US6] Add visual indication of completed items (strikethrough, dim)
 - [ ] T167 [US6] Implement list archival UI with archive/restore buttons
 - [ ] T168 [US6] Add concurrent edit conflict resolution (last-write-wins)
 

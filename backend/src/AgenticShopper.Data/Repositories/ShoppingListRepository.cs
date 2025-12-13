@@ -308,6 +308,129 @@ public class ShoppingListRepository : IRepository<ShoppingList>
     }
 
     /// <summary>
+    /// Archive a specific shopping list (T154)
+    /// </summary>
+    public async Task<ShoppingList> ArchiveAsync(Guid listId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var list = await _context.ShoppingLists.FindAsync([listId], cancellationToken);
+            
+            if (list == null)
+            {
+                throw new InvalidOperationException($"Shopping list with ID {listId} not found");
+            }
+
+            list.Status = ListStatus.Archived;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Archived shopping list {ListId}", listId);
+            return list;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error archiving shopping list {ListId}", listId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Restore an archived shopping list (T154)
+    /// </summary>
+    public async Task<ShoppingList> RestoreAsync(Guid listId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var list = await _context.ShoppingLists.FindAsync([listId], cancellationToken);
+            
+            if (list == null)
+            {
+                throw new InvalidOperationException($"Shopping list with ID {listId} not found");
+            }
+
+            if (list.Status != ListStatus.Archived)
+            {
+                throw new InvalidOperationException($"Shopping list {listId} is not archived");
+            }
+
+            list.Status = ListStatus.Active;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Restored shopping list {ListId}", listId);
+            return list;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error restoring shopping list {ListId}", listId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Copy an existing shopping list (T158)
+    /// </summary>
+    public async Task<ShoppingList> CopyAsync(
+        Guid sourceListId, 
+        string newName, 
+        Guid copiedBy,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var sourceList = await _context.ShoppingLists
+                .Include(sl => sl.Items)
+                    .ThenInclude(item => item.Product)
+                .FirstOrDefaultAsync(sl => sl.Id == sourceListId, cancellationToken);
+
+            if (sourceList == null)
+            {
+                throw new InvalidOperationException($"Shopping list with ID {sourceListId} not found");
+            }
+
+            var newList = new ShoppingList
+            {
+                Id = Guid.NewGuid(),
+                FamilyId = sourceList.FamilyId,
+                Name = newName,
+                CreatedBy = copiedBy,
+                CreatedDate = DateTime.UtcNow,
+                Status = ListStatus.Active,
+                SharedWith = sourceList.SharedWith
+            };
+
+            // Copy items
+            foreach (var sourceItem in sourceList.Items)
+            {
+                newList.Items.Add(new ShoppingListItem
+                {
+                    Id = Guid.NewGuid(),
+                    ListId = newList.Id,
+                    ProductId = sourceItem.ProductId,
+                    Quantity = sourceItem.Quantity,
+                    IsPurchased = false, // Reset purchase status
+                    Urgency = sourceItem.Urgency,
+                    AddedBy = copiedBy,
+                    Source = ItemSource.Manual, // Mark as manual since it's a copy
+                    AddedDate = DateTime.UtcNow
+                });
+            }
+
+            _context.ShoppingLists.Add(newList);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Copied shopping list {SourceId} to new list {NewId}", 
+                sourceListId, newList.Id);
+            
+            return newList;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error copying shopping list {ListId}", sourceListId);
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Add item to shopping list
     /// </summary>
     public async Task<ShoppingListItem> AddItemAsync(

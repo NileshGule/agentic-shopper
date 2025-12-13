@@ -319,6 +319,87 @@ public class ListGeneratorController : ControllerBase
             return StatusCode(500, new { error = "Internal server error" });
         }
     }
+
+    /// <summary>
+    /// Archive a specific shopping list (T159)
+    /// </summary>
+    [HttpPost("{listId}/archive")]
+    public async Task<ActionResult<ShoppingList>> ArchiveList(Guid listId)
+    {
+        try
+        {
+            _logger.LogInformation("Archiving shopping list {ListId}", listId);
+
+            var list = await _shoppingListRepository.ArchiveAsync(listId, CancellationToken.None);
+            return Ok(list);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error archiving list {ListId}", listId);
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Restore an archived shopping list (T159)
+    /// </summary>
+    [HttpPost("{listId}/restore")]
+    public async Task<ActionResult<ShoppingList>> RestoreList(Guid listId)
+    {
+        try
+        {
+            _logger.LogInformation("Restoring shopping list {ListId}", listId);
+
+            var list = await _shoppingListRepository.RestoreAsync(listId, CancellationToken.None);
+            return Ok(list);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error restoring list {ListId}", listId);
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Copy an existing shopping list (T158)
+    /// </summary>
+    [HttpPost("{listId}/copy")]
+    public async Task<ActionResult<ShoppingList>> CopyList(
+        Guid listId,
+        [FromBody] CopyListDto dto)
+    {
+        try
+        {
+            _logger.LogInformation("Copying shopping list {ListId}", listId);
+
+            if (string.IsNullOrWhiteSpace(dto.NewName))
+            {
+                return BadRequest(new { error = "NewName is required" });
+            }
+
+            var newList = await _shoppingListRepository.CopyAsync(
+                listId, dto.NewName, dto.CopiedBy, CancellationToken.None);
+            
+            return Ok(newList);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error copying list {ListId}", listId);
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
 }
 
 /// <summary>
@@ -362,4 +443,13 @@ public class ArchiveResultDto
     public int ArchivedCount { get; set; }
     public Guid FamilyId { get; set; }
     public int DaysOld { get; set; }
+}
+
+/// <summary>
+/// DTO for copy list operation (T158)
+/// </summary>
+public class CopyListDto
+{
+    public required string NewName { get; set; }
+    public Guid CopiedBy { get; set; }
 }
