@@ -1,9 +1,9 @@
 using AgenticShopper.Agents.Categorization.Services;
 using AgenticShopper.Core.Abstractions;
-using AgenticShopper.Core.Interfaces;
 using AgenticShopper.Core.Models;
 using AgenticShopper.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
 namespace AgenticShopper.Agents.Categorization;
@@ -56,12 +56,12 @@ public class CategorizationAgent : AgentBase
     public override string Description => "Automatically categorizes products using LLM-powered classification";
 
     public CategorizationAgent(
-        ILlmProvider? llmProvider,
+        IChatClient? chatClient,
         ApplicationDbContext dbContext,
         ILogger<CategorizationAgent> logger)
-        : base(logger, llmProvider)
+        : base(logger, chatClient)
     {
-        _classifier = new CategoryClassifier(llmProvider, logger);
+        _classifier = new CategoryClassifier(chatClient, logger);
         _dbContext = dbContext;
     }
 

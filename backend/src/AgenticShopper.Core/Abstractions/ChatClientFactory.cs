@@ -1,23 +1,23 @@
-using AgenticShopper.Core.Interfaces;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 
 namespace AgenticShopper.Core.Abstractions;
 
 /// <summary>
-/// Factory for creating LLM provider instances based on configuration
+/// Factory for creating chat client instances based on configuration (Microsoft Agent Framework pattern)
 /// </summary>
-public class LlmProviderFactory
+public class ChatClientFactory
 {
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public LlmProviderFactory(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+    public ChatClientFactory(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
     }
 
-    public ILlmProvider CreateProvider()
+    public IChatClient CreateChatClient()
     {
         var provider = _configuration["LLM:Provider"] ?? "FoundryLocal";
         var endpoint = _configuration["LLM:Endpoint"] ?? throw new InvalidOperationException("LLM endpoint not configured");

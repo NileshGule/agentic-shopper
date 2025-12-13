@@ -4,6 +4,7 @@ using AgenticShopper.Core.Abstractions;
 using AgenticShopper.Core.Interfaces;
 using AgenticShopper.Core.Models;
 using AgenticShopper.Core.Services;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
 namespace AgenticShopper.Agents.Receipt;
@@ -28,8 +29,8 @@ public class ReceiptAgent : AgentBase
         IBlobStorageService blobStorageService,
         IRepository<Core.Models.Receipt> receiptRepository,
         IRepository<Product> productRepository,
-        ILlmProvider? llmProvider = null)
-        : base(logger, llmProvider)
+        IChatClient? chatClient = null)
+        : base(logger, chatClient)
     {
         _ocrService = ocrService ?? throw new ArgumentNullException(nameof(ocrService));
         _blobStorageService = blobStorageService ?? throw new ArgumentNullException(nameof(blobStorageService));

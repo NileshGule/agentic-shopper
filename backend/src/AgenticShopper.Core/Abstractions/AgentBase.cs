@@ -1,21 +1,21 @@
 using Microsoft.Extensions.Logging;
-using AgenticShopper.Core.Interfaces;
+using Microsoft.Extensions.AI;
 
 namespace AgenticShopper.Core.Abstractions;
 
 /// <summary>
-/// Abstract base class for all agents in the multi-agent system.
+/// Abstract base class for all agents in the multi-agent system using Microsoft Agent Framework patterns.
 /// Provides common functionality for agent lifecycle, communication, and execution.
 /// </summary>
 public abstract class AgentBase
 {
     protected readonly ILogger Logger;
-    protected readonly ILlmProvider? LlmProvider;
+    protected readonly IChatClient? ChatClient;
 
-    protected AgentBase(ILogger logger, ILlmProvider? llmProvider = null)
+    protected AgentBase(ILogger logger, IChatClient? chatClient = null)
     {
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        LlmProvider = llmProvider;
+        ChatClient = chatClient;
     }
 
     /// <summary>

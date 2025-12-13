@@ -1,5 +1,5 @@
 using AgenticShopper.Agents.Categorization.Prompts;
-using AgenticShopper.Core.Interfaces;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -18,11 +18,11 @@ public class CategorizationResult
 }
 
 /// <summary>
-/// Service for classifying products into categories using LLM
+/// Service for classifying products into categories using chat client (Microsoft Agent Framework)
 /// </summary>
 public class CategoryClassifier
 {
-    private readonly ILlmProvider? _llmProvider;
+    private readonly IChatClient? _chatClient;
     private readonly ILogger _logger;
 
     // Predefined categories matching database seed data
@@ -42,10 +42,10 @@ public class CategoryClassifier
     };
 
     public CategoryClassifier(
-        ILlmProvider? llmProvider,
+        IChatClient? chatClient,
         ILogger logger)
     {
-        _llmProvider = llmProvider;
+        _chatClient = chatClient;
         _logger = logger;
     }
 
@@ -61,10 +61,10 @@ public class CategoryClassifier
     {
         _logger.LogInformation("Classifying product: {ProductName}", productName);
 
-        // If no LLM provider available, use fallback logic
-        if (_llmProvider == null)
+        // If no chat client available, use fallback logic
+        if (_chatClient == null)
         {
-            _logger.LogWarning("No LLM provider available, using fallback categorization");
+            _logger.LogWarning("No chat client available, using fallback categorization");
             return FallbackCategorization(productName);
         }
 
@@ -77,17 +77,21 @@ public class CategoryClassifier
                 previousPurchaseCount
             );
 
-            var request = new LlmRequest
+            var messages = new List<ChatMessage>
             {
-                SystemPrompt = CategorizationPrompts.SystemPrompt,
-                Prompt = userPrompt,
-                Temperature = 0.3, // Lower temperature for more consistent categorization
-                MaxTokens = 500
+                new(ChatRole.System, CategorizationPrompts.SystemPrompt),
+                new(ChatRole.User, userPrompt)
             };
 
-            var response = await _llmProvider.GenerateAsync(request, cancellationToken);
+            var chatOptions = new ChatOptions
+            {
+                Temperature = 0.3f, // Lower temperature for more consistent categorization
+                MaxOutputTokens = 500
+            };
 
-            return ParseLlmResponse(productName, response.Content);
+            var response = await _chatClient.GetResponseAsync(messages, chatOptions, cancellationToken);
+
+            return ParseLlmResponse(productName, response.Messages.LastOrDefault()?.Text ?? string.Empty);
         }
         catch (Exception ex)
         {
@@ -97,7 +101,7 @@ public class CategoryClassifier
     }
 
     /// <summary>
-    /// Classify multiple products in a single LLM call (more efficient)
+    /// Classify multiple products in a single chat call (more efficient)
     /// </summary>
     public async Task<IEnumerable<CategorizationResult>> ClassifyProductsBatchAsync(
         IEnumerable<string> productNames,
@@ -106,9 +110,9 @@ public class CategoryClassifier
         var names = productNames.ToList();
         _logger.LogInformation("Batch classifying {Count} products", names.Count);
 
-        if (_llmProvider == null)
+        if (_chatClient == null)
         {
-            _logger.LogWarning("No LLM provider available, using fallback categorization");
+            _logger.LogWarning("No chat client available, using fallback categorization");
             return names.Select(FallbackCategorization);
         }
 
@@ -116,17 +120,21 @@ public class CategoryClassifier
         {
             var userPrompt = CategorizationPrompts.BuildBatchProductPrompt(names);
 
-            var request = new LlmRequest
+            var messages = new List<ChatMessage>
             {
-                SystemPrompt = CategorizationPrompts.SystemPrompt,
-                Prompt = userPrompt,
-                Temperature = 0.3,
-                MaxTokens = 2000
+                new(ChatRole.System, CategorizationPrompts.SystemPrompt),
+                new(ChatRole.User, userPrompt)
             };
 
-            var response = await _llmProvider.GenerateAsync(request, cancellationToken);
+            var chatOptions = new ChatOptions
+            {
+                Temperature = 0.3f,
+                MaxOutputTokens = 2000
+            };
 
-            return ParseBatchLlmResponse(response.Content);
+            var response = await _chatClient.GetResponseAsync(messages, chatOptions, cancellationToken);
+
+            return ParseBatchLlmResponse(response.Messages.LastOrDefault()?.Text ?? string.Empty);
         }
         catch (Exception ex)
         {
@@ -147,14 +155,14 @@ public class CategoryClassifier
         _logger.LogInformation("Validating category '{Category}' for product: {ProductName}",
             currentCategory, productName);
 
-        if (_llmProvider == null)
+        if (_chatClient == null)
         {
             return new CategorizationResult
             {
                 ProductName = productName,
                 Category = currentCategory,
                 Confidence = 0.5,
-                Reasoning = "Validation skipped - no LLM provider available"
+                Reasoning = "Validation skipped - no chat client available"
             };
         }
 
@@ -166,17 +174,21 @@ public class CategoryClassifier
                 validationReason
             );
 
-            var request = new LlmRequest
+            var messages = new List<ChatMessage>
             {
-                SystemPrompt = CategorizationPrompts.SystemPrompt,
-                Prompt = userPrompt,
-                Temperature = 0.3,
-                MaxTokens = 500
+                new(ChatRole.System, CategorizationPrompts.SystemPrompt),
+                new(ChatRole.User, userPrompt)
             };
 
-            var response = await _llmProvider.GenerateAsync(request, cancellationToken);
+            var chatOptions = new ChatOptions
+            {
+                Temperature = 0.3f,
+                MaxOutputTokens = 500
+            };
 
-            return ParseLlmResponse(productName, response.Content);
+            var response = await _chatClient.GetResponseAsync(messages, chatOptions, cancellationToken);
+
+            return ParseLlmResponse(productName, response.Messages.LastOrDefault()?.Text ?? string.Empty);
         }
         catch (Exception ex)
         {

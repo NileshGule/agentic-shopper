@@ -1,9 +1,9 @@
 using AgenticShopper.Agents.Frequency.Services;
 using AgenticShopper.Core.Abstractions;
-using AgenticShopper.Core.Interfaces;
 using AgenticShopper.Core.Models;
 using AgenticShopper.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
 namespace AgenticShopper.Agents.Frequency;
@@ -58,8 +58,8 @@ public class FrequencyAgent : AgentBase
     public FrequencyAgent(
         ApplicationDbContext dbContext,
         ILogger<FrequencyAgent> logger,
-        ILlmProvider? llmProvider = null)
-        : base(logger, llmProvider)
+        IChatClient? chatClient = null)
+        : base(logger, chatClient)
     {
         _calculator = new FrequencyCalculator(logger);
         _dbContext = dbContext;
