@@ -487,7 +487,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Product categorization with AI
 - ✅ Purchase frequency tracking
 - ✅ Shopping list generation
-- 🚧 Price comparison and promotions (74% complete)
+- 🚧 Price comparison and promotions (83% complete)
 
 ### v1.1 (Planned)
 - Family account collaboration
@@ -509,6 +509,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Build Status**: 🟢 Passing (Backend) | 🟢 Passing (Frontend)
 
 **Recent Updates:**
+
+**Commit 922d1dd** (User Story 4 - T125 & T129):
+- ✅ Promotion indicators in ListEditor component
+- ✅ Automatic promotion lookup for all shopping list items
+- ✅ Discount percentage badges (e.g., '25% OFF at Coles')
+- ✅ Store-specific promotion display (Coles/Woolworths colors)
+- ✅ Product name fuzzy matching for promotion detection
+- ✅ Best promotion selection (highest discount per product)
+- ✅ Promotion expiry date indicators with smart formatting
+- ✅ Dynamic countdown ('Expires today', 'in X days', etc.)
+- ✅ Non-blocking promotion loading (errors don't break UI)
+- ✅ Enhanced ListEditor with 82 additional lines
+- ✅ User Story 4: 83% Complete (19/23 tasks)
 
 **Commit b880369** (User Story 4 - T123-T128 Frontend):
 - ✅ priceApi TypeScript client for price comparison API (210 lines)
@@ -625,8 +638,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Auto/manual visual indicators with emoji badges (🤖 vs 👤)
 
 **Implementation Progress**:
-- Tasks Completed: T001-T128 (128/489 tasks = 26%)
-- User Stories: 3 Complete ✅ | 1 In Progress 🚧 (US4: 74%) | 3 Planned 📋
+- Tasks Completed: T001-T129 (129/489 tasks = 26%)
+- User Stories: 3 Complete ✅ | 1 In Progress 🚧 (US4: 83%) | 3 Planned 📋
 - Backend Agents: 5/6 (Receipt ✅, Categorization ✅, Frequency ✅, ListGenerator ✅, PriceComparison 🚧)
 - Frontend Pages: 4/6 (Receipts ✅, Products ✅, Shopping Lists ✅, Price Comparison 🚧)
-- Lines of Code: ~21,200+ (backend + frontend)
+- Lines of Code: ~21,300+ (backend + frontend)
