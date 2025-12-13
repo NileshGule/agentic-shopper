@@ -296,11 +296,11 @@
 - [ ] T174 [US7] Add notes display in shopping list generation
 - [X] T175 [P] [US7] Create ProductNotes component in frontend/src/components/products/ProductNotes.tsx
 - [X] T176 [US7] Implement product API client in frontend/src/services/api/productApi.ts
-- [ ] T177 [US7] Add notes/tags editor in ProductsPage
-- [ ] T178 [US7] Implement tag autocomplete for common tags (organic, gluten-free, etc.)
-- [ ] T179 [US7] Add tag filtering UI with chip-based selection
+- [X] T177 [US7] Add notes/tags editor in ProductsPage
+- [X] T178 [US7] Implement tag autocomplete for common tags (organic, gluten-free, etc.)
+- [X] T179 [US7] Add tag filtering UI with chip-based selection
 - [ ] T180 [US7] Display product notes in shopping list items
-- [ ] T181 [US7] Implement notes search functionality
+- [X] T181 [US7] Implement notes search functionality
 
 **Checkpoint**: User Story 7 complete - Product notes and metadata functional
 

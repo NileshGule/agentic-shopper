@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { ProductCategorization } from '../components/products/ProductCategorization';
 import { FrequencyAssignment } from '../components/products/FrequencyAssignment';
+import { ProductNotes } from '../components/products/ProductNotes';
 import Button from '../components/common/Button';
 import { productApi, PurchaseFrequency } from '../services/api/productApi';
 import { categorizationApi } from '../services/api/categorizationApi';
 import { frequencyApi } from '../services/api/frequencyApi';
+import { COMMON_PRODUCT_TAGS } from '../constants/productTags';
 import type { 
   Product
 } from '../services/api/productApi';
@@ -17,17 +19,20 @@ import type {
 } from '../services/api/frequencyApi';
 import './ProductsPage.css';
 
-type FilterMode = 'all' | 'uncategorized' | 'category' | 'frequency';
+type FilterMode = 'all' | 'uncategorized' | 'category' | 'frequency' | 'tag' | 'notes';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([...COMMON_PRODUCT_TAGS]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [selectedFrequency, setSelectedFrequency] = useState<PurchaseFrequency | ''>('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [notesSearchTerm, setNotesSearchTerm] = useState('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch categories on mount
@@ -42,6 +47,23 @@ export default function ProductsPage() {
     };
     fetchCategories();
   }, []);
+
+  // Fetch all tags to enhance autocomplete
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const tags = await productApi.getAllTags();
+        // Combine common tags with user-created tags, removing duplicates
+        const allTags = Array.from(new Set([...COMMON_PRODUCT_TAGS, ...tags]));
+        setAvailableTags(allTags);
+      } catch (err) {
+        console.error('Failed to fetch tags:', err);
+        // Fallback to common tags only
+        setAvailableTags([...COMMON_PRODUCT_TAGS]);
+      }
+    };
+    fetchTags();
+  }, [refreshTrigger]);
 
   // Fetch products based on filters
   useEffect(() => {
@@ -58,6 +80,10 @@ export default function ProductsPage() {
           result = await productApi.getProductsByCategory(selectedCategoryId);
         } else if (filterMode === 'frequency' && selectedFrequency) {
           result = await productApi.getProductsByFrequency(selectedFrequency as PurchaseFrequency);
+        } else if (filterMode === 'tag' && selectedTags.length > 0) {
+          result = await productApi.filterByTags(selectedTags);
+        } else if (filterMode === 'notes' && notesSearchTerm.trim()) {
+          result = await productApi.searchByNotes(notesSearchTerm.trim());
         } else if (searchTerm.trim()) {
           result = await productApi.searchProducts(searchTerm.trim());
         } else {
@@ -75,7 +101,7 @@ export default function ProductsPage() {
     };
 
     fetchProducts();
-  }, [filterMode, selectedCategoryId, selectedFrequency, searchTerm, refreshTrigger]);
+  }, [filterMode, selectedCategoryId, selectedFrequency, selectedTags, notesSearchTerm, searchTerm, refreshTrigger]);
 
   const handleCategoryChange = async (productId: string, categoryId: string, _isManual: boolean) => {
     try {
@@ -169,11 +195,35 @@ export default function ProductsPage() {
     }
   };
 
+  const handleSaveNotesAndTags = async (
+    productId: string, 
+    notes?: string, 
+    tags?: string[]
+  ) => {
+    try {
+      await productApi.updateNotesAndTags(productId, notes, tags);
+      
+      // Refresh products to show updated notes/tags and update tag list
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (err) {
+      console.error('Failed to save notes and tags:', err);
+      throw new Error('Failed to save notes and tags. Please try again.');
+    }
+  };
+
   const handleClearFilters = () => {
     setSearchTerm('');
     setFilterMode('all');
     setSelectedCategoryId('');
     setSelectedFrequency('');
+    setSelectedTags([]);
+    setNotesSearchTerm('');
+  };
+
+  const handleToggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
   };
 
   return (
@@ -209,6 +259,8 @@ export default function ProductsPage() {
               <option value="uncategorized">Uncategorized Only</option>
               <option value="category">By Category</option>
               <option value="frequency">By Frequency</option>
+              <option value="tag">By Tags</option>
+              <option value="notes">By Notes Content</option>
             </select>
           </div>
 
@@ -247,6 +299,42 @@ export default function ProductsPage() {
                 <option value={PurchaseFrequency.Occasional}>Occasional</option>
                 <option value={PurchaseFrequency.Unknown}>Unknown</option>
               </select>
+            </div>
+          )}
+
+          {filterMode === 'tag' && (
+            <div className="filter-group tag-filter-group">
+              <label className="filter-label">Select Tags:</label>
+              <div className="tag-chips-filter">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    className={`tag-chip-filter ${selectedTags.includes(tag) ? 'selected' : ''}`}
+                    onClick={() => handleToggleTag(tag)}
+                  >
+                    {tag}
+                    {selectedTags.includes(tag) && ' ✓'}
+                  </button>
+                ))}
+              </div>
+              {selectedTags.length > 0 && (
+                <div className="selected-tags-info">
+                  {selectedTags.length} tag{selectedTags.length !== 1 ? 's' : ''} selected
+                </div>
+              )}
+            </div>
+          )}
+
+          {filterMode === 'notes' && (
+            <div className="filter-group">
+              <label className="filter-label">Search Notes:</label>
+              <input
+                type="text"
+                className="filter-input"
+                placeholder="Enter search term..."
+                value={notesSearchTerm}
+                onChange={(e) => setNotesSearchTerm(e.target.value)}
+              />
             </div>
           )}
 
@@ -324,11 +412,14 @@ export default function ProductsPage() {
                     />
                   </div>
 
-                  {product.notes && (
-                    <div className="product-notes">
-                      <strong>Notes:</strong> {product.notes}
-                    </div>
-                  )}
+                  <div className="product-section">
+                    <h4 className="section-title">Notes & Tags</h4>
+                    <ProductNotes
+                      product={product}
+                      availableTags={availableTags}
+                      onSave={handleSaveNotesAndTags}
+                    />
+                  </div>
                 </div>
               </div>
             ))}
