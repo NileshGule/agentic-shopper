@@ -203,12 +203,12 @@
 - [X] T120 [US4] Implement product name fuzzy matching for promotions in PriceAgent
 - [X] T121 [US4] Add optimal shopping strategy calculation (FR-026) in PriceOptimizer
 - [ ] T122 [US4] Update CoordinatorAgent to include price comparison in list generation
-- [ ] T123 [P] [US4] Create PriceComparison component in frontend/src/components/shopping-lists/PriceComparison.tsx
-- [ ] T124 [US4] Implement price API client in frontend/src/services/api/priceApi.ts
+- [X] T123 [P] [US4] Create PriceComparison component in frontend/src/components/shopping-lists/PriceComparison.tsx
+- [X] T124 [US4] Implement price API client in frontend/src/services/api/priceApi.ts
 - [ ] T125 [US4] Add promotion indicators (badges, discount %) to ListEditor component
-- [ ] T126 [US4] Create price comparison table showing Coles vs Woolworths prices
-- [ ] T127 [US4] Add savings summary component with total potential savings
-- [ ] T128 [US4] Implement optimal shopping strategy display (which items at which store)
+- [X] T126 [US4] Create price comparison table showing Coles vs Woolworths prices
+- [X] T127 [US4] Add savings summary component with total potential savings
+- [X] T128 [US4] Implement optimal shopping strategy display (which items at which store)
 - [ ] T129 [US4] Add promotion expiry date indicators in UI
 
 **Checkpoint**: User Story 4 complete - Price comparison and promotion recommendations working
