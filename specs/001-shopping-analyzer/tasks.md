@@ -131,10 +131,10 @@
 - [X] T074 [US2] Add product normalized name generation for matching in ProductRepository
 - [X] T075 [US2] Update CoordinatorAgent to orchestrate categorization after receipt processing
 - [X] T076 [US2] Update CoordinatorAgent to orchestrate frequency calculation after categorization
-- [ ] T077 [P] [US2] Create ProductCategorization component in frontend/src/components/products/ProductCategorization.tsx
-- [ ] T078 [P] [US2] Create FrequencyAssignment component in frontend/src/components/products/FrequencyAssignment.tsx
-- [ ] T079 [US2] Implement categorization API client in frontend/src/services/api/categorizationApi.ts
-- [ ] T080 [P] [US2] Implement frequency API client in frontend/src/services/api/frequencyApi.ts
+- [X] T077 [P] [US2] Create ProductCategorization component in frontend/src/components/products/ProductCategorization.tsx
+- [X] T078 [P] [US2] Create FrequencyAssignment component in frontend/src/components/products/FrequencyAssignment.tsx
+- [X] T079 [US2] Implement categorization API client in frontend/src/services/api/categorizationApi.ts
+- [X] T080 [P] [US2] Implement frequency API client in frontend/src/services/api/frequencyApi.ts
 - [ ] T081 [US2] Create ProductsPage with categorization and frequency views in frontend/src/pages/ProductsPage.tsx
 - [ ] T082 [US2] Add category dropdown with predefined + custom categories in ProductCategorization
 - [ ] T083 [US2] Implement frequency selector (Weekly, Fortnightly, Monthly, Quarterly, Annually, Occasional)
