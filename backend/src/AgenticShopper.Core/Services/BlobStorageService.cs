@@ -1,6 +1,9 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Sas;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -34,16 +37,24 @@ public class BlobStorageService : IBlobStorageService
                 return $"https://mockstore.blob.core.windows.net/{containerName}/{fileName}";
             }
 
-            // TODO: Implement actual Azure Blob Storage upload
-            // var blobServiceClient = new BlobServiceClient(_connectionString);
-            // var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-            // await containerClient.CreateIfNotExistsAsync();
-            // var blobClient = containerClient.GetBlobClient(fileName);
-            // await blobClient.UploadAsync(content, overwrite: true);
-            // return blobClient.Uri.ToString();
+            var blobServiceClient = new BlobServiceClient(_connectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+            await containerClient.CreateIfNotExistsAsync(PublicAccessType.None);
+            var blobClient = containerClient.GetBlobClient(fileName);
+            
+            // Set content type based on file extension
+            var blobHttpHeaders = new BlobHttpHeaders
+            {
+                ContentType = GetContentType(fileName)
+            };
+            
+            await blobClient.UploadAsync(content, new BlobUploadOptions
+            {
+                HttpHeaders = blobHttpHeaders
+            });
 
             _logger.LogInformation("Uploaded blob: {FileName} to container: {Container}", fileName, containerName);
-            return $"https://mockstore.blob.core.windows.net/{containerName}/{fileName}";
+            return blobClient.Uri.ToString();
         }
         catch (Exception ex)
         {
@@ -62,13 +73,17 @@ public class BlobStorageService : IBlobStorageService
                 return new MemoryStream();
             }
 
-            // TODO: Implement actual Azure Blob Storage download
-            // var blobClient = new BlobClient(new Uri(blobUrl), new DefaultAzureCredential());
-            // var response = await blobClient.DownloadAsync();
-            // return response.Value.Content;
+            var blobClient = new BlobClient(new Uri(blobUrl), new Azure.Storage.StorageSharedKeyCredential(
+                GetAccountName(_connectionString), GetAccountKey(_connectionString)));
+            var response = await blobClient.DownloadStreamingAsync();
+            
+            // Copy to memory stream to return seekable stream
+            var memoryStream = new MemoryStream();
+            await response.Value.Content.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
 
             _logger.LogInformation("Downloaded blob: {BlobUrl}", blobUrl);
-            return new MemoryStream();
+            return memoryStream;
         }
         catch (Exception ex)
         {
@@ -87,12 +102,11 @@ public class BlobStorageService : IBlobStorageService
                 return;
             }
 
-            // TODO: Implement actual Azure Blob Storage delete
-            // var blobClient = new BlobClient(new Uri(blobUrl), new DefaultAzureCredential());
-            // await blobClient.DeleteIfExistsAsync();
+            var blobClient = new BlobClient(new Uri(blobUrl), new Azure.Storage.StorageSharedKeyCredential(
+                GetAccountName(_connectionString), GetAccountKey(_connectionString)));
+            await blobClient.DeleteIfExistsAsync();
 
             _logger.LogInformation("Deleted blob: {BlobUrl}", blobUrl);
-            await Task.CompletedTask;
         }
         catch (Exception ex)
         {
@@ -111,27 +125,69 @@ public class BlobStorageService : IBlobStorageService
                 return blobUrl;
             }
 
-            // TODO: Implement actual SAS token generation
-            // var blobClient = new BlobClient(new Uri(blobUrl), new DefaultAzureCredential());
-            // var sasBuilder = new BlobSasBuilder
-            // {
-            //     BlobContainerName = blobClient.BlobContainerName,
-            //     BlobName = blobClient.Name,
-            //     Resource = "b",
-            //     ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(expiryMinutes)
-            // };
-            // sasBuilder.SetPermissions(BlobSasPermissions.Read);
-            // var sasToken = blobClient.GenerateSasUri(sasBuilder);
-            // return sasToken.ToString();
+            var blobClient = new BlobClient(new Uri(blobUrl), new Azure.Storage.StorageSharedKeyCredential(
+                GetAccountName(_connectionString), GetAccountKey(_connectionString)));
+                
+            var sasBuilder = new BlobSasBuilder
+            {
+                BlobContainerName = blobClient.BlobContainerName,
+                BlobName = blobClient.Name,
+                Resource = "b",
+                ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(expiryMinutes)
+            };
+            sasBuilder.SetPermissions(BlobSasPermissions.Read);
+            
+            var sasUri = blobClient.GenerateSasUri(sasBuilder);
 
             _logger.LogInformation("Generated SAS URL for blob: {BlobUrl}", blobUrl);
             await Task.CompletedTask;
-            return $"{blobUrl}?sv=mock&se={DateTime.UtcNow.AddMinutes(expiryMinutes):yyyy-MM-ddTHH:mm:ssZ}";
+            return sasUri.ToString();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to generate SAS URL for blob: {BlobUrl}", blobUrl);
             throw;
         }
+    }
+
+    private string GetContentType(string fileName)
+    {
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        return extension switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".pdf" => "application/pdf",
+            ".gif" => "image/gif",
+            ".bmp" => "image/bmp",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
+    }
+
+    private string GetAccountName(string connectionString)
+    {
+        var parts = connectionString.Split(';');
+        foreach (var part in parts)
+        {
+            if (part.StartsWith("AccountName=", StringComparison.OrdinalIgnoreCase))
+            {
+                return part.Substring("AccountName=".Length);
+            }
+        }
+        throw new InvalidOperationException("AccountName not found in connection string");
+    }
+
+    private string GetAccountKey(string connectionString)
+    {
+        var parts = connectionString.Split(';');
+        foreach (var part in parts)
+        {
+            if (part.StartsWith("AccountKey=", StringComparison.OrdinalIgnoreCase))
+            {
+                return part.Substring("AccountKey=".Length);
+            }
+        }
+        throw new InvalidOperationException("AccountKey not found in connection string");
     }
 }
