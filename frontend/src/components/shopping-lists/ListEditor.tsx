@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingList, ShoppingListItem, ItemUrgency, AddItemRequest } from '../../services/api/shoppingListApi';
 import priceApi, { PromotionDto } from '../../services/api/priceApi';
+import realtimeSync from '../../services/websocket/realtimeSync';
 import './ListEditor.css';
 
 export interface ListEditorProps {
@@ -10,6 +11,7 @@ export interface ListEditorProps {
   onRemoveItem: (itemId: string) => Promise<void>;
   onCompleteList?: () => Promise<void>;
   userId: string;
+  userName?: string;
   disabled?: boolean;
 }
 
@@ -31,12 +33,92 @@ export const ListEditor: React.FC<ListEditorProps> = ({
   onRemoveItem,
   onCompleteList,
   userId,
+  userName = 'User',
   disabled = false
 }) => {
   const [items, setItems] = useState<ShoppingListItem[]>(list.items || []);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [promotions, setPromotions] = useState<Map<string, PromotionDto>>(new Map());
+  const [isConnected, setIsConnected] = useState(false);
+  const [activeUsers, setActiveUsers] = useState<string[]>([]);
+
+  // Setup SignalR connection
+  useEffect(() => {
+    const setupSignalR = async () => {
+      try {
+        await realtimeSync.connect();
+        await realtimeSync.joinList(list.id, userId, userName);
+        setIsConnected(true);
+
+        // Setup event listeners
+        realtimeSync.onUserJoined((userInfo) => {
+          console.log('User joined:', userInfo.userName);
+          setActiveUsers(prev => [...new Set([...prev, userInfo.userName])]);
+        });
+
+        realtimeSync.onUserLeft((userInfo) => {
+          console.log('User left:', userInfo.userName);
+          setActiveUsers(prev => prev.filter(u => u !== userInfo.userName));
+        });
+
+        realtimeSync.onItemAdded((event) => {
+          if (event.userId !== userId) {
+            // Another user added an item
+            setItems(prev => [...prev, event.item]);
+          }
+        });
+
+        realtimeSync.onItemUpdated((event) => {
+          if (event.userId !== userId) {
+            // Another user updated an item - last write wins
+            setItems(prev => prev.map(item => 
+              item.id === event.item.id ? { ...item, ...event.item } : item
+            ));
+          }
+        });
+
+        realtimeSync.onItemDeleted((event) => {
+          if (event.userId !== userId) {
+            // Another user deleted an item
+            setItems(prev => prev.filter(item => item.id !== event.itemId));
+          }
+        });
+
+        realtimeSync.onItemPurchased((event) => {
+          if (event.userId !== userId) {
+            // Another user toggled purchase status
+            setItems(prev => prev.map(item => 
+              item.id === event.itemId 
+                ? { ...item, isPurchased: event.isPurchased }
+                : item
+            ));
+          }
+        });
+
+        realtimeSync.onListRenamed((event) => {
+          console.log('List renamed:', event.newName);
+          // Parent component should handle this
+        });
+
+        realtimeSync.onListCompleted((event) => {
+          console.log('List completed by another user');
+          // Parent component should handle this
+        });
+
+      } catch (error) {
+        console.error('SignalR setup failed:', error);
+        setError('Real-time sync unavailable. Changes will still be saved.');
+      }
+    };
+
+    setupSignalR();
+
+    return () => {
+      realtimeSync.leaveList().catch(console.error);
+      realtimeSync.removeAllListeners();
+    };
+  }, [list.id, userId, userName]);
 
   useEffect(() => {
     setItems(list.items || []);
@@ -158,6 +240,11 @@ export const ListEditor: React.FC<ListEditorProps> = ({
 
     try {
       await onUpdateItem(item.id, newPurchasedState);
+      
+      // Notify other users via SignalR
+      if (isConnected) {
+        await realtimeSync.notifyItemPurchased(list.id, item.id, newPurchasedState, userId);
+      }
     } catch (err) {
       // Revert on error
       setItems(list.items || []);
@@ -177,6 +264,11 @@ export const ListEditor: React.FC<ListEditorProps> = ({
 
     try {
       await onRemoveItem(item.id);
+      
+      // Notify other users via SignalR
+      if (isConnected) {
+        await realtimeSync.notifyItemDeleted(list.id, item.id, userId);
+      }
     } catch (err) {
       // Revert on error
       setItems(list.items || []);
@@ -239,6 +331,17 @@ export const ListEditor: React.FC<ListEditorProps> = ({
           <p className="list-date">
             Created {new Date(list.createdDate).toLocaleDateString()}
           </p>
+          {isConnected && (
+            <div className="realtime-status">
+              <span className="status-indicator connected"></span>
+              <span className="status-text">Real-time sync active</span>
+              {activeUsers.length > 0 && (
+                <span className="active-users">
+                  · {activeUsers.length} other {activeUsers.length === 1 ? 'user' : 'users'} viewing
+                </span>
+              )}
+            </div>
+          )}
         </div>
         {onCompleteList && list.status === 'Active' && (
           <button

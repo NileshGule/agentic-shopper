@@ -235,5 +235,62 @@ export const shoppingListApi = {
       }
     );
     return response.data;
+  },
+
+  /**
+   * Create a new empty shopping list (T163)
+   */
+  async createList(
+    familyId: string,
+    name: string,
+    createdBy: string
+  ): Promise<ShoppingList> {
+    const response = await api.post<ShoppingList>(
+      `/api/listgenerator/list`,
+      {
+        familyId,
+        name,
+        createdBy
+      }
+    );
+    return response.data;
+  },
+
+  /**
+   * Archive a specific shopping list (T167)
+   */
+  async archiveList(listId: string): Promise<ShoppingList> {
+    const response = await api.post<ShoppingList>(
+      `/api/listgenerator/${listId}/archive`
+    );
+    return response.data;
+  },
+
+  /**
+   * Restore an archived shopping list (T167)
+   */
+  async restoreList(listId: string): Promise<ShoppingList> {
+    const response = await api.post<ShoppingList>(
+      `/api/listgenerator/${listId}/restore`
+    );
+    return response.data;
+  },
+
+  /**
+   * Copy an existing shopping list (T162)
+   */
+  async copyList(
+    listId: string,
+    newName: string,
+    copiedBy: string
+  ): Promise<ShoppingList> {
+    const response = await api.post<ShoppingList>(
+      `/api/listgenerator/${listId}/copy`,
+      {
+        newName,
+        copiedBy
+      }
+    );
+    return response.data;
   }
 };

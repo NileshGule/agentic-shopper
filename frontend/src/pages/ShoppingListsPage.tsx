@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ListGenerator } from '../components/shopping-lists/ListGenerator';
 import { ListEditor } from '../components/shopping-lists/ListEditor';
+import { ListCreationModal } from '../components/shopping-lists/ListCreationModal';
 import { 
   shoppingListApi, 
   ShoppingList, 
@@ -14,6 +15,7 @@ export default function ShoppingListsPage() {
   const [lists, setLists] = useState<ShoppingList[]>([]);
   const [selectedList, setSelectedList] = useState<ShoppingList | null>(null);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -103,26 +105,88 @@ export default function ShoppingListsPage() {
     }
   };
 
+  const handleCreateList = async (name: string) => {
+    try {
+      const newList = await shoppingListApi.createList(familyId, name, userId);
+      await loadLists();
+      setSelectedList(newList);
+      setShowCreateModal(false);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to create list');
+    }
+  };
+
+  const handleArchiveList = async (listId: string) => {
+    if (!confirm('Archive this list? You can restore it later.')) {
+      return;
+    }
+
+    try {
+      await shoppingListApi.archiveList(listId);
+      await loadLists();
+      
+      // Clear selection if archived list was selected
+      if (selectedList?.id === listId) {
+        setSelectedList(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to archive list');
+    }
+  };
+
+  const handleCopyList = async (listId: string) => {
+    const originalList = lists.find(l => l.id === listId);
+    const newName = prompt(`Copy list "${originalList?.name}".\nEnter new list name:`);
+    
+    if (!newName || !newName.trim()) {
+      return;
+    }
+
+    try {
+      const copiedList = await shoppingListApi.copyList(listId, newName.trim(), userId);
+      await loadLists();
+      setSelectedList(copiedList);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to copy list');
+    }
+  };
+
   return (
     <div className="shopping-lists-page">
       <div className="page-header">
         <h1>Shopping Lists</h1>
-        <button 
-          onClick={() => {
-            setShowGenerator(true);
-            setSelectedList(null);
-          }}
-          className="btn-primary"
-        >
-          <span className="icon">🛒</span>
-          Generate New List
-        </button>
+        <div className="header-actions">
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="btn-secondary"
+            title="Create empty list"
+          >
+            <span className="icon">📝</span>
+            New Empty List
+          </button>
+          <button 
+            onClick={() => {
+              setShowGenerator(true);
+              setSelectedList(null);
+            }}
+            className="btn-primary"
+          >
+            <span className="icon">🛒</span>
+            Generate From Patterns
+          </button>
+        </div>
       </div>
 
       {error && (
         <div className="error-banner">
           <span className="error-icon">⚠️</span>
           {error}
+          <button 
+            onClick={() => setError(null)} 
+            className="error-close"
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -134,7 +198,7 @@ export default function ShoppingListsPage() {
           ) : lists.length === 0 ? (
             <div className="empty-lists">
               <p>No active lists</p>
-              <p className="hint">Generate a new list to get started!</p>
+              <p className="hint">Create or generate a list to get started!</p>
             </div>
           ) : (
             <div className="lists-list">
@@ -142,9 +206,11 @@ export default function ShoppingListsPage() {
                 <div 
                   key={list.id}
                   className={`list-item ${selectedList?.id === list.id ? 'active' : ''}`}
-                  onClick={() => handleSelectList(list.id)}
                 >
-                  <div className="list-item-content">
+                  <div 
+                    className="list-item-content"
+                    onClick={() => handleSelectList(list.id)}
+                  >
                     <h3>{list.name}</h3>
                     <p className="list-date">
                       {new Date(list.createdDate).toLocaleDateString()}
@@ -152,6 +218,28 @@ export default function ShoppingListsPage() {
                     <p className="list-stats">
                       {list.items?.length || 0} items
                     </p>
+                  </div>
+                  <div className="list-item-actions">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyList(list.id);
+                      }}
+                      className="icon-button"
+                      title="Copy list"
+                    >
+                      📋
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleArchiveList(list.id);
+                      }}
+                      className="icon-button"
+                      title="Archive list"
+                    >
+                      📦
+                    </button>
                   </div>
                 </div>
               ))}
@@ -180,11 +268,18 @@ export default function ShoppingListsPage() {
             <div className="welcome-message">
               <span className="welcome-icon">🛒</span>
               <h2>Welcome to Shopping Lists</h2>
-              <p>Select a list from the sidebar or generate a new one</p>
+              <p>Select a list from the sidebar or create a new one</p>
             </div>
           )}
         </main>
       </div>
+
+      {showCreateModal && (
+        <ListCreationModal
+          onCreateList={handleCreateList}
+          onCancel={() => setShowCreateModal(false)}
+        />
+      )}
     </div>
   );
 }

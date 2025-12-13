@@ -27,6 +27,46 @@
   color: #666;
 }
 
+.realtime-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ccc;
+}
+
+.status-indicator.connected {
+  background-color: #28a745;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-text {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.active-users {
+  color: #666;
+  font-style: italic;
+}
+
 .btn-complete {
   padding: 10px 20px;
   background: #28a745;
