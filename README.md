@@ -487,7 +487,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Product categorization with AI
 - ✅ Purchase frequency tracking
 - ✅ Shopping list generation
-- 🚧 Price comparison and promotions (39% complete)
+- 🚧 Price comparison and promotions (52% complete)
 
 ### v1.1 (Planned)
 - Family account collaboration
@@ -509,6 +509,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Build Status**: 🟢 Passing (Backend) | 🟢 Passing (Frontend)
 
 **Recent Updates:**
+
+**Commit 2326973** (User Story 4 - T119-T121):
+- ✅ PromotionRefreshJob background service for weekly catalog updates (114 lines)
+- ✅ IHostedService implementation runs every Sunday at 1:00 AM UTC
+- ✅ ShouldRefreshNow logic for scheduled execution matching catalog update cycles
+- ✅ Hourly check interval with 30-minute retry on errors
+- ✅ Graceful shutdown handling for clean service termination
+- ✅ Integration with PriceAgent.RefreshPromotionsAsync method
+- ✅ T120: Product name fuzzy matching verified (exact + partial match)
+- ✅ T121: Optimal shopping strategy calculation verified (single vs split)
+- ✅ User Story 4: 52% Complete (12/23 tasks)
 
 **Commit 7041572** (User Story 4 - T114-T115):
 - ✅ PriceOptimizer service for savings calculation (258 lines)
@@ -595,8 +606,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Auto/manual visual indicators with emoji badges (🤖 vs 👤)
 
 **Implementation Progress**:
-- Tasks Completed: T001-T115 (115/489 tasks = 24%)
-- User Stories: 3 Complete ✅ | 1 In Progress 🚧 (US4: 39%) | 3 Planned 📋
+- Tasks Completed: T001-T121 (121/489 tasks = 25%)
+- User Stories: 3 Complete ✅ | 1 In Progress 🚧 (US4: 52%) | 3 Planned 📋
 - Backend Agents: 5/6 (Receipt ✅, Categorization ✅, Frequency ✅, ListGenerator ✅, PriceComparison 🚧)
 - Frontend Pages: 3/6 (Receipts ✅, Products ✅, Shopping Lists ✅)
-- Lines of Code: ~20,200+ (backend + frontend)
+- Lines of Code: ~20,300+ (backend + frontend)
