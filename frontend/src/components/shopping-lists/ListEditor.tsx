@@ -42,6 +42,8 @@ export const ListEditor: React.FC<ListEditorProps> = ({
   const [promotions, setPromotions] = useState<Map<string, PromotionDto>>(new Map());
   const [isConnected, setIsConnected] = useState(false);
   const [activeUsers, setActiveUsers] = useState<string[]>([]);
+  const [draggedItem, setDraggedItem] = useState<ShoppingListItem | null>(null);
+  const [dragOverItem, setDragOverItem] = useState<ShoppingListItem | null>(null);
 
   // Setup SignalR connection
   useEffect(() => {
@@ -301,6 +303,71 @@ export const ListEditor: React.FC<ListEditorProps> = ({
     }
   };
 
+  // Drag and drop handlers for item reordering
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, item: ShoppingListItem) => {
+    setDraggedItem(item);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget.outerHTML);
+    
+    // Make the dragged element slightly transparent
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5';
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    // Reset opacity
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1';
+    }
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault(); // Necessary to allow drop
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>, item: ShoppingListItem) => {
+    e.preventDefault();
+    if (draggedItem && draggedItem.id !== item.id) {
+      setDragOverItem(item);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropItem: ShoppingListItem) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!draggedItem || draggedItem.id === dropItem.id) {
+      setDragOverItem(null);
+      return;
+    }
+
+    // Reorder items within the same category
+    const reorderedItems = [...items];
+    const draggedIndex = reorderedItems.findIndex(i => i.id === draggedItem.id);
+    const dropIndex = reorderedItems.findIndex(i => i.id === dropItem.id);
+
+    if (draggedIndex === -1 || dropIndex === -1) {
+      setDragOverItem(null);
+      return;
+    }
+
+    // Remove dragged item and insert at new position
+    const [removed] = reorderedItems.splice(draggedIndex, 1);
+    reorderedItems.splice(dropIndex, 0, removed);
+
+    // Optimistic update
+    setItems(reorderedItems);
+    setDragOverItem(null);
+
+    // TODO: Call API to persist new order
+    // For now, the order will reset on page reload
+    console.log('Item reordered:', { from: draggedIndex, to: dropIndex });
+  };
+
   // Group items by category
   const itemsByCategory = items.reduce((acc, item) => {
     const category = item.product?.categoryName || 'Uncategorized';
@@ -381,8 +448,19 @@ export const ListEditor: React.FC<ListEditorProps> = ({
               {itemsByCategory[category].map(item => (
                 <div 
                   key={item.id} 
-                  className={`list-item ${item.isPurchased ? 'purchased' : ''}`}
+                  className={`list-item ${item.isPurchased ? 'purchased' : ''} ${
+                    draggedItem?.id === item.id ? 'dragging' : ''
+                  } ${dragOverItem?.id === item.id ? 'drag-over' : ''}`}
+                  draggable={!disabled && !item.isPurchased}
+                  onDragStart={(e) => handleDragStart(e, item)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={handleDragOver}
+                  onDragEnter={(e) => handleDragEnter(e, item)}
+                  onDrop={(e) => handleDrop(e, item)}
                 >
+                  <div className="drag-handle" title="Drag to reorder">
+                    ⋮⋮
+                  </div>
                   <div className="item-content">
                     <input
                       type="checkbox"

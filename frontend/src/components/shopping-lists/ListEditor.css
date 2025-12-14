@@ -164,7 +164,24 @@
   justify-content: space-between;
   padding: 16px;
   border-bottom: 1px solid #f0f0f0;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  position: relative;
+  cursor: default;
+}
+
+.list-item[draggable="true"] {
+  cursor: move;
+}
+
+.list-item.dragging {
+  opacity: 0.5;
+  background: #e3f2fd;
+  border: 2px dashed #2196f3;
+}
+
+.list-item.drag-over {
+  background: #fff3e0;
+  border-top: 3px solid #ff9800;
 }
 
 .list-item:last-child {
@@ -177,6 +194,37 @@
 
 .list-item.purchased {
   opacity: 0.6;
+}
+
+.list-item.purchased[draggable="true"] {
+  cursor: not-allowed;
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #999;
+  font-size: 16px;
+  cursor: grab;
+  user-select: none;
+  margin-right: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.list-item:hover .drag-handle {
+  opacity: 1;
+}
+
+.list-item[draggable="false"] .drag-handle {
+  display: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
 }
 
 .list-item.purchased .item-name {

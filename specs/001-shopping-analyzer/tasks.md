@@ -270,7 +270,7 @@
 - [X] T161 [US6] Update ListEditor with real-time sync via SignalR
 - [X] T162 [US6] Add multi-list management UI in ShoppingListsPage
 - [X] T163 [US6] Implement list naming and creation modal
-- [ ] T164 [US6] Add item reordering (drag-and-drop) in ListEditor
+- [X] T164 [US6] Add item reordering (drag-and-drop) in ListEditor
 - [X] T165 [US6] Implement purchase marking checkbox in list items
 - [X] T166 [US6] Add visual indication of completed items (strikethrough, dim)
 - [X] T167 [US6] Implement list archival UI with archive/restore buttons
