@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../common/Button';
+import { ReceiptCardSkeleton } from '../common/SkeletonLoader';
 import receiptApi, { ReceiptSummary } from '../../services/api/receiptApi';
 
 interface ReceiptListProps {
@@ -121,8 +122,21 @@ const ReceiptList: React.FC<ReceiptListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="receipt-list loading">
-        <p>Loading receipts...</p>
+      <div className="receipt-list">
+        <div className="list-header">
+          <div className="filter-tabs">
+            <button className="tab active">All Receipts</button>
+            <button className="tab">Needs Review</button>
+          </div>
+        </div>
+        <div className="skeleton-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', padding: '20px' }}>
+          <ReceiptCardSkeleton />
+          <ReceiptCardSkeleton />
+          <ReceiptCardSkeleton />
+          <ReceiptCardSkeleton />
+          <ReceiptCardSkeleton />
+          <ReceiptCardSkeleton />
+        </div>
       </div>
     );
   }

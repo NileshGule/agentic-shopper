@@ -7,6 +7,7 @@ import {
   UpdateBudgetDto,
   BudgetPeriod
 } from '../../services/api/budgetApi';
+import { TableSkeleton } from '../common/SkeletonLoader';
 import './BudgetTracker.css';
 
 export interface BudgetTrackerProps {
@@ -154,9 +155,14 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
 
   if (loading) {
     return (
-      <div className="budget-tracker loading">
-        <div className="spinner"></div>
-        <p>Loading budgets...</p>
+      <div className="budget-tracker">
+        <div className="tracker-header">
+          <h2>Budget Tracker</h2>
+          <button className="create-button" disabled style={{ opacity: 0.5 }}>
+            + New Budget
+          </button>
+        </div>
+        <TableSkeleton rows={6} columns={5} />
       </div>
     );
   }

@@ -3,6 +3,7 @@ import { ProductCategorization } from '../components/products/ProductCategorizat
 import { FrequencyAssignment } from '../components/products/FrequencyAssignment';
 import { ProductNotes } from '../components/products/ProductNotes';
 import Button from '../components/common/Button';
+import SkeletonLoader from '../components/common/SkeletonLoader';
 import { productApi, PurchaseFrequency } from '../services/api/productApi';
 import { categorizationApi } from '../services/api/categorizationApi';
 import { frequencyApi } from '../services/api/frequencyApi';
@@ -348,9 +349,24 @@ export default function ProductsPage() {
 
       {/* Products List */}
       <div className="products-content">
-        {loading && <div className="loading-message">Loading products...</div>}
+        {loading && (
+          <div className="products-list">
+            <div className="products-count" style={{ opacity: 0.5 }}>Loading products...</div>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="product-card" style={{ padding: '20px' }}>
+                <SkeletonLoader variant="text" width="60%" height={24} />
+                <SkeletonLoader variant="text" width="40%" height={16} />
+                <SkeletonLoader variant="rectangular" width="100%" height={100} />
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                  <SkeletonLoader variant="text" width="30%" height={14} />
+                  <SkeletonLoader variant="text" width="25%" height={14} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         
-        {error && <div className="error-message">{error}</div>}
+        {!loading && error && <div className="error-message">{error}</div>}
         
         {!loading && !error && products.length === 0 && (
           <div className="empty-state">

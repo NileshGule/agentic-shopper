@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { budgetApi, SpendingAnalyticsResponse, DataPoint } from '../../services/api/budgetApi';
 import { LineChart, BarChart, PieChart } from './Charts';
+import { ChartSkeleton } from '../common/SkeletonLoader';
 import './SpendingDashboard.css';
 
 export interface SpendingDashboardProps {
@@ -59,9 +60,22 @@ export const SpendingDashboard: React.FC<SpendingDashboardProps> = ({ familyId }
 
   if (loading) {
     return (
-      <div className="spending-dashboard loading">
-        <div className="spinner"></div>
-        <p>Loading analytics...</p>
+      <div className="spending-dashboard">
+        <div className="dashboard-header">
+          <h2>Spending Analytics</h2>
+          <div className="controls" style={{ opacity: 0.5 }}>
+            <div className="trend-selector">
+              <button className="active">Weekly</button>
+              <button>Monthly</button>
+              <button>Quarterly</button>
+            </div>
+          </div>
+        </div>
+        <div className="charts-grid">
+          <ChartSkeleton />
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
       </div>
     );
   }

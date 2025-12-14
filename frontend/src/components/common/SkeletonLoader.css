@@ -1,0 +1,258 @@
+/* Skeleton Loader Styles */
+
+/* Base skeleton animation */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0px,
+    #f8f8f8 40px,
+    #f0f0f0 80px
+  );
+  background-size: 200px 100%;
+  animation: skeleton-loading 1.4s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #2a2a2a 0px,
+      #333333 40px,
+      #2a2a2a 80px
+    );
+  }
+}
+
+/* Text skeleton */
+.skeleton-text {
+  height: 16px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.skeleton-text:last-child {
+  margin-bottom: 0;
+}
+
+/* Rectangular skeleton */
+.skeleton-rect {
+  width: 100%;
+  border-radius: 8px;
+}
+
+/* Circular skeleton */
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+/* List item skeleton */
+.skeleton-list-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0px,
+    #f8f8f8 40px,
+    #f0f0f0 80px
+  );
+  background-size: 200px 100%;
+  animation: skeleton-loading 1.4s ease-in-out infinite;
+  border-radius: 8px;
+  height: 60px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton-list-item {
+    background: linear-gradient(
+      90deg,
+      #2a2a2a 0px,
+      #333333 40px,
+      #2a2a2a 80px
+    );
+  }
+}
+
+/* Card skeleton */
+.skeleton-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 16px;
+  background: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton-card {
+    border-color: #404040;
+    background: #1a1a1a;
+  }
+}
+
+/* Table row skeleton */
+.skeleton-table-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 16px;
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton-table-row {
+    border-bottom-color: #404040;
+  }
+}
+
+/* Skeleton group */
+.skeleton-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Shopping List Skeleton */
+.skeleton-shopping-list {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton-shopping-list {
+    background: #1a1a1a;
+    border-color: #404040;
+  }
+}
+
+.skeleton-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton-list-header {
+    border-bottom-color: #333333;
+  }
+}
+
+.skeleton-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Receipt Card Skeleton */
+.skeleton-receipt-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton-receipt-card {
+    background: #1a1a1a;
+    border-color: #404040;
+  }
+}
+
+.skeleton-card-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Chart Skeleton */
+.skeleton-chart {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton-chart {
+    background: #1a1a1a;
+    border-color: #404040;
+  }
+}
+
+.skeleton-chart-legend {
+  display: flex;
+  gap: 24px;
+  margin-top: 16px;
+  justify-content: center;
+}
+
+/* Table Skeleton */
+.skeleton-table {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton-table {
+    background: #1a1a1a;
+    border-color: #404040;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .skeleton-list-item {
+    height: 50px;
+    padding: 10px;
+  }
+
+  .skeleton-chart {
+    padding: 16px;
+  }
+
+  .skeleton-card-content {
+    padding: 12px;
+  }
+}
+
+/* Accessibility */
+.skeleton[aria-busy="true"] {
+  pointer-events: none;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .skeleton-list-item {
+    animation: none;
+    background: #f0f0f0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .skeleton,
+    .skeleton-list-item {
+      background: #2a2a2a;
+    }
+  }
+}

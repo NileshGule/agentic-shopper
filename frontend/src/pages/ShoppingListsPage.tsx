@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ListGenerator } from '../components/shopping-lists/ListGenerator';
 import { ListEditor } from '../components/shopping-lists/ListEditor';
 import { ListCreationModal } from '../components/shopping-lists/ListCreationModal';
+import { ShoppingListSkeleton } from '../components/common/SkeletonLoader';
 import { 
   shoppingListApi, 
   ShoppingList, 
@@ -194,7 +195,11 @@ export default function ShoppingListsPage() {
         <aside className="lists-sidebar">
           <h2>Your Lists</h2>
           {isLoading ? (
-            <div className="loading">Loading lists...</div>
+            <div className="skeleton-container">
+              <ShoppingListSkeleton />
+              <ShoppingListSkeleton />
+              <ShoppingListSkeleton />
+            </div>
           ) : lists.length === 0 ? (
             <div className="empty-lists">
               <p>No active lists</p>
