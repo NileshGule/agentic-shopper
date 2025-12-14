@@ -316,7 +316,7 @@
 - [ ] T185 Add data export (CSV) functionality (FR-049) in CoordinatorAgent
 - [ ] T186 Add receipt deletion functionality (FR-050) in ReceiptController
 - [X] T187 [P] Add loading states and skeleton screens in all frontend components
-- [ ] T188 [P] Implement toast notifications for user feedback across UI
+- [X] T188 [P] Implement toast notifications for user feedback across UI
 - [ ] T189 [P] Add responsive design CSS for mobile devices
 - [ ] T190 Setup Kubernetes manifests in backend/deployment/kubernetes/
 - [ ] T191 [P] Setup Azure Container Apps Bicep templates in backend/deployment/azure/

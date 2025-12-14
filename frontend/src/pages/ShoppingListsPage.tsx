@@ -3,6 +3,7 @@ import { ListGenerator } from '../components/shopping-lists/ListGenerator';
 import { ListEditor } from '../components/shopping-lists/ListEditor';
 import { ListCreationModal } from '../components/shopping-lists/ListCreationModal';
 import { ShoppingListSkeleton } from '../components/common/SkeletonLoader';
+import { useToast } from '../components/common/ToastContext';
 import { 
   shoppingListApi, 
   ShoppingList, 
@@ -19,6 +20,7 @@ export default function ShoppingListsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   // TODO: Replace with actual user/family data from auth context
   const familyId = 'demo-family-id';
@@ -51,8 +53,11 @@ export default function ShoppingListsPage() {
       // Select the newly generated list
       const newList = await shoppingListApi.getListById(generatedList.listId);
       setSelectedList(newList);
+      toast.showSuccess(`Shopping list "${newList.name}" generated successfully!`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load generated list');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load generated list';
+      setError(errorMsg);
+      toast.showError(errorMsg);
     }
   };
 
@@ -69,11 +74,17 @@ export default function ShoppingListsPage() {
   const handleAddItem = async (item: AddItemRequest) => {
     if (!selectedList) return;
 
-    await shoppingListApi.addItemToList(selectedList.id, item);
+    try {
+      await shoppingListApi.addItemToList(selectedList.id, item);
 
-    // Refresh selected list
-    const updatedList = await shoppingListApi.getListById(selectedList.id);
-    setSelectedList(updatedList);
+      // Refresh selected list
+      const updatedList = await shoppingListApi.getListById(selectedList.id);
+      setSelectedList(updatedList);
+      toast.showSuccess(`Added "${item.productName}" to list`);
+    } catch (err) {
+      toast.showError(err instanceof Error ? err.message : 'Failed to add item');
+      throw err;
+    }
   };
 
   const handleRemoveItem = async (itemId: string) => {
@@ -89,11 +100,18 @@ export default function ShoppingListsPage() {
   const handleCompleteList = async () => {
     if (!selectedList) return;
 
-    await shoppingListApi.completeList(selectedList.id);
+    try {
+      await shoppingListApi.completeList(selectedList.id);
 
-    // Reload lists and clear selection
-    await loadLists();
-    setSelectedList(null);
+      // Reload lists and clear selection
+      await loadLists();
+      const listName = selectedList.name;
+      setSelectedList(null);
+      toast.showSuccess(`List "${listName}" marked as complete!`);
+    } catch (err) {
+      toast.showError(err instanceof Error ? err.message : 'Failed to complete list');
+      throw err;
+    }
   };
 
   const handleSelectList = async (listId: string) => {
@@ -112,12 +130,16 @@ export default function ShoppingListsPage() {
       await loadLists();
       setSelectedList(newList);
       setShowCreateModal(false);
+      toast.showSuccess(`List "${name}" created successfully!`);
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Failed to create list');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to create list';
+      toast.showError(errorMsg);
+      throw new Error(errorMsg);
     }
   };
 
   const handleArchiveList = async (listId: string) => {
+    const listToArchive = lists.find(l => l.id === listId);
     if (!confirm('Archive this list? You can restore it later.')) {
       return;
     }
@@ -130,8 +152,11 @@ export default function ShoppingListsPage() {
       if (selectedList?.id === listId) {
         setSelectedList(null);
       }
+      toast.showSuccess(`List "${listToArchive?.name}" archived successfully`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to archive list');
+      const errorMsg = err instanceof Error ? err.message : 'Failed to archive list';
+      setError(errorMsg);
+      toast.showError(errorMsg);
     }
   };
 
@@ -147,6 +172,13 @@ export default function ShoppingListsPage() {
       const copiedList = await shoppingListApi.copyList(listId, newName.trim(), userId);
       await loadLists();
       setSelectedList(copiedList);
+      toast.showSuccess(`List copied as "${newName.trim()}"`);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to copy list';
+      setError(errorMsg);
+      toast.showError(errorMsg);
+    }
+  };
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to copy list');
     }

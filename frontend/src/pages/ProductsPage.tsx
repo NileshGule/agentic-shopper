@@ -4,6 +4,7 @@ import { FrequencyAssignment } from '../components/products/FrequencyAssignment'
 import { ProductNotes } from '../components/products/ProductNotes';
 import Button from '../components/common/Button';
 import SkeletonLoader from '../components/common/SkeletonLoader';
+import { useToast } from '../components/common/ToastContext';
 import { productApi, PurchaseFrequency } from '../services/api/productApi';
 import { categorizationApi } from '../services/api/categorizationApi';
 import { frequencyApi } from '../services/api/frequencyApi';
@@ -35,6 +36,7 @@ export default function ProductsPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [notesSearchTerm, setNotesSearchTerm] = useState('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const toast = useToast();
 
   // Fetch categories on mount
   useEffect(() => {
@@ -114,8 +116,11 @@ export default function ProductsPage() {
       
       // Refresh products to show updated category
       setRefreshTrigger((prev) => prev + 1);
+      const category = categories.find(c => c.id === categoryId);
+      toast.showSuccess(`Category updated to "${category?.name}"`);
     } catch (err) {
       console.error('Failed to update category:', err);
+      toast.showError('Failed to update category. Please try again.');
       throw new Error('Failed to update category. Please try again.');
     }
   };
@@ -150,8 +155,10 @@ export default function ProductsPage() {
       
       // Refresh products to show updated frequency
       setRefreshTrigger((prev) => prev + 1);
+      toast.showSuccess(`Purchase frequency updated to "${frequency}"`);
     } catch (err) {
       console.error('Failed to update frequency:', err);
+      toast.showError('Failed to update frequency. Please try again.');
       throw new Error('Failed to update frequency. Please try again.');
     }
   };
@@ -160,14 +167,17 @@ export default function ProductsPage() {
     try {
       if (isPaused) {
         await frequencyApi.pauseFrequency(productId);
+        toast.showInfo('Purchase frequency tracking paused');
       } else {
         await frequencyApi.resumeFrequency(productId);
+        toast.showInfo('Purchase frequency tracking resumed');
       }
       
       // Refresh products to show updated pause state
       setRefreshTrigger((prev) => prev + 1);
     } catch (err) {
       console.error('Failed to toggle pause:', err);
+      toast.showError('Failed to toggle pause. Please try again.');
       throw new Error('Failed to toggle pause. Please try again.');
     }
   };

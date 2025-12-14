@@ -3,6 +3,7 @@ import ReceiptUpload from '../components/receipts/ReceiptUpload';
 import ReceiptList from '../components/receipts/ReceiptList';
 import ReceiptReview from '../components/receipts/ReceiptReview';
 import Button from '../components/common/Button';
+import { useToast } from '../components/common/ToastContext';
 
 type ViewMode = 'list' | 'upload' | 'review';
 
@@ -10,6 +11,7 @@ export default function ReceiptsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedReceiptId, setSelectedReceiptId] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const toast = useToast();
 
   // TODO: Replace with actual family ID from user context/auth
   const familyId = 'demo-family-001';
@@ -20,6 +22,7 @@ export default function ReceiptsPage() {
     setSelectedReceiptId(receiptId);
     setViewMode('review');
     setRefreshTrigger((prev) => prev + 1);
+    toast.showSuccess('Receipt uploaded successfully! Please review the extracted data.');
   };
 
   const handleSelectReceipt = (receiptId: string) => {
@@ -31,11 +34,17 @@ export default function ReceiptsPage() {
     setViewMode('list');
     setSelectedReceiptId(null);
     setRefreshTrigger((prev) => prev + 1);
+    toast.showSuccess('Receipt saved successfully!');
   };
 
   const handleCancel = () => {
     setViewMode('list');
     setSelectedReceiptId(null);
+  };
+
+  const handleUploadError = (error: string) => {
+    console.error('Upload error:', error);
+    toast.showError(error || 'Failed to upload receipt. Please try again.');
   };
 
   return (
@@ -68,7 +77,7 @@ export default function ReceiptsPage() {
             familyId={familyId}
             uploadedBy={uploadedBy}
             onUploadSuccess={handleUploadSuccess}
-            onUploadError={(error) => console.error('Upload error:', error)}
+            onUploadError={handleUploadError}
           />
         )}
 
