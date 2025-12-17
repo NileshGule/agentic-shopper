@@ -326,7 +326,7 @@
 - [ ] T195 Run quickstart.md validation (Docker Compose up, verify all services)
 - [ ] T196 [P] Add API rate limiting for external-facing endpoints
 - [ ] T197 [P] Implement request validation with FluentValidation
-- [ ] T198 Security audit (OWASP checks, dependency scanning)
+- [X] T198 Security audit (OWASP checks, dependency scanning)
 - [ ] T199 Performance profiling and optimization across agents
 - [ ] T200 Final integration testing of complete workflows
 
