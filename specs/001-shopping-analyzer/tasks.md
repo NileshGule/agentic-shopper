@@ -26,7 +26,7 @@
 - [X] T004 [P] Configure ESLint, Prettier, and EditorConfig for code quality
 - [X] T005 [P] Setup Docker Compose configuration in backend/deployment/docker/docker-compose.yml
 - [X] T006 [P] Create .gitignore for .NET, React, and Docker artifacts
-- [ ] T007 Create repository structure per plan.md (backend/, frontend/, .github/, specs/)
+- [X] T007 Create repository structure per plan.md (backend/, frontend/, .github/, specs/)
 
 ---
 
@@ -50,7 +50,7 @@
 - [X] T019 Implement LLM provider factory with configuration-based selection in backend/src/AgenticShopper.Core/Abstractions/LlmProviderFactory.cs
 - [X] T020 [P] Configure Microsoft Agent Framework runtime in backend/src/AgenticShopper.Coordinator/Program.cs
 - [X] T021 [P] Implement AgentBase abstract class in backend/src/AgenticShopper.Core/Abstractions/AgentBase.cs
-- [ ] T022 [P] Setup JWT authentication middleware in backend/src/AgenticShopper.Coordinator/Middleware/
+- [X] T022 [P] Setup JWT authentication middleware in backend/src/AgenticShopper.Coordinator/Middleware/
 - [X] T023 [P] Configure CORS for React frontend in backend/src/AgenticShopper.Coordinator/Program.cs
 - [X] T024 [P] Setup error handling middleware in backend/src/AgenticShopper.Coordinator/Middleware/ErrorHandlingMiddleware.cs
 - [X] T025 [P] Configure structured logging with Serilog in backend/src/AgenticShopper.Coordinator/Program.cs

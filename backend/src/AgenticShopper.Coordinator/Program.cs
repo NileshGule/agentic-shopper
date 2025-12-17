@@ -1,3 +1,4 @@
+using System.Text;
 using AgenticShopper.Agents.Receipt;
 using AgenticShopper.Agents.Receipt.Interfaces;
 using AgenticShopper.Agents.Receipt.Services;
@@ -9,7 +10,9 @@ using AgenticShopper.Core.Models;
 using AgenticShopper.Core.Services;
 using AgenticShopper.Data;
 using AgenticShopper.Data.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
 // Configure Serilog
@@ -53,6 +56,49 @@ try
 
     // Register agents
     builder.Services.AddScoped<ReceiptAgent>();
+
+    // Configure JWT Authentication
+    var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+    var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
+    
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidateAudience = true,
+            ValidAudience = jwtSettings["Audience"],
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+        
+        // Configure JWT bearer for SignalR
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+    builder.Services.AddAuthorization();
 
     // Configure CORS
     builder.Services.AddCors(options =>
@@ -105,6 +151,8 @@ try
 
     app.UseCors();
 
+    // Use JWT authentication middleware
+    app.UseAuthentication();
     app.UseAuthorization();
 
     app.MapControllers();
