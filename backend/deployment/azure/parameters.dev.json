@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appName": {
+      "value": "agentic-shopper"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "location": {
+      "value": "australiaeast"
+    },
+    "imageTag": {
+      "value": "dev"
+    },
+    "postgresAdminUsername": {
+      "value": "pgadmin"
+    },
+    "postgresAdminPassword": {
+      "value": "REPLACE_WITH_SECURE_PASSWORD"
+    },
+    "jwtSecretKey": {
+      "value": "REPLACE_WITH_BASE64_JWT_SECRET"
+    },
+    "llmEndpoint": {
+      "value": "https://your-foundry.openai.azure.com/"
+    },
+    "llmApiKey": {
+      "value": "REPLACE_WITH_LLM_API_KEY"
+    },
+    "documentIntelligenceEndpoint": {
+      "value": "https://your-region.api.cognitive.microsoft.com/"
+    },
+    "documentIntelligenceApiKey": {
+      "value": "REPLACE_WITH_DOCUMENT_INTELLIGENCE_KEY"
+    },
+    "coordinatorMinReplicas": {
+      "value": 1
+    },
+    "coordinatorMaxReplicas": {
+      "value": 3
+    },
+    "enableApplicationInsights": {
+      "value": false
+    },
+    "enableZoneRedundancy": {
+      "value": false
+    }
+  }
+}

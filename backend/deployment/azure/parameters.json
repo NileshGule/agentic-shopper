@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appName": {
+      "value": "agentic-shopper"
+    },
+    "environment": {
+      "value": "prod"
+    },
+    "location": {
+      "value": "australiaeast"
+    },
+    "imageTag": {
+      "value": "latest"
+    },
+    "postgresAdminUsername": {
+      "value": "pgadmin"
+    },
+    "postgresAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.KeyVault/vaults/{vault-name}"
+        },
+        "secretName": "postgres-admin-password"
+      }
+    },
+    "jwtSecretKey": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.KeyVault/vaults/{vault-name}"
+        },
+        "secretName": "jwt-secret-key"
+      }
+    },
+    "llmEndpoint": {
+      "value": "https://your-foundry.openai.azure.com/"
+    },
+    "llmApiKey": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.KeyVault/vaults/{vault-name}"
+        },
+        "secretName": "llm-api-key"
+      }
+    },
+    "documentIntelligenceEndpoint": {
+      "value": "https://your-region.api.cognitive.microsoft.com/"
+    },
+    "documentIntelligenceApiKey": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.KeyVault/vaults/{vault-name}"
+        },
+        "secretName": "document-intelligence-api-key"
+      }
+    },
+    "coordinatorMinReplicas": {
+      "value": 3
+    },
+    "coordinatorMaxReplicas": {
+      "value": 10
+    },
+    "enableApplicationInsights": {
+      "value": true
+    },
+    "enableZoneRedundancy": {
+      "value": true
+    }
+  }
+}
