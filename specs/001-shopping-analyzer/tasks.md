@@ -324,7 +324,7 @@
 - [X] T193 [P] Create CI/CD pipeline in .github/workflows/ci-frontend.yml
 - [ ] T194 Update README.md with feature overview and quickstart
 - [ ] T195 Run quickstart.md validation (Docker Compose up, verify all services)
-- [ ] T196 [P] Add API rate limiting for external-facing endpoints
+- [X] T196 [P] Add API rate limiting for external-facing endpoints
 - [ ] T197 [P] Implement request validation with FluentValidation
 - [X] T198 Security audit (OWASP checks, dependency scanning)
 - [ ] T199 Performance profiling and optimization across agents
