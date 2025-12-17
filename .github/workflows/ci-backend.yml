@@ -1,0 +1,226 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci-backend.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'backend/**'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  SOLUTION_PATH: 'backend/AgenticShopper.sln'
+  DOCKER_REGISTRY: 'ghcr.io'
+  IMAGE_NAME: ${{ github.repository }}/agentic-shopper
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+        
+      - name: Build solution
+        run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
+        
+      - name: Run unit tests
+        run: dotnet test backend/tests/AgenticShopper.Tests.Unit/*.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+        continue-on-error: true
+        
+      - name: Run integration tests
+        run: dotnet test backend/tests/AgenticShopper.Tests.Integration/*.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=integration-test-results.trx"
+        continue-on-error: true
+        
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: .NET Test Results
+          path: '**/*.trx'
+          reporter: dotnet-trx
+          fail-on-error: false
+          
+      - name: Code coverage
+        run: |
+          dotnet test backend/tests/**/*.csproj \
+            --configuration Release \
+            --no-build \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./coverage
+        continue-on-error: true
+        
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          directory: ./coverage
+          flags: backend
+          fail_ci_if_error: false
+          
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+        
+      - name: Run security scan
+        run: |
+          dotnet list ${{ env.SOLUTION_PATH }} package --vulnerable --include-transitive 2>&1 | tee security-scan.log
+        continue-on-error: true
+        
+      - name: Upload security scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-results
+          path: security-scan.log
+          
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    if: github.event_name == 'push'
+    
+    strategy:
+      matrix:
+        service:
+          - name: coordinator
+            dockerfile: backend/deployment/docker/Dockerfile.coordinator
+            context: backend
+          - name: agent
+            dockerfile: backend/deployment/docker/Dockerfile.agent
+            context: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service.name }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+            
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          file: ${{ matrix.service.dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: development
+      url: https://dev.agentic-shopper.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy to Azure Container Apps (Development)
+        run: |
+          echo "Deploying to Azure Container Apps - Development environment"
+          echo "This step requires Azure credentials and Container Apps configuration"
+          # az containerapp update \
+          #   --name agentic-shopper-coordinator-dev \
+          #   --resource-group agentic-shopper-dev \
+          #   --image ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}-coordinator:develop
+        
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://staging.agentic-shopper.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy to Azure Container Apps (Staging)
+        run: |
+          echo "Deploying to Azure Container Apps - Staging environment"
+          echo "This step requires Azure credentials and Container Apps configuration"
+          # az containerapp update \
+          #   --name agentic-shopper-coordinator-staging \
+          #   --resource-group agentic-shopper-staging \
+          #   --image ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}-coordinator:latest
+          
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [docker-build, deploy-staging]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://agentic-shopper.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy to Azure Container Apps (Production)
+        run: |
+          echo "Deploying to Azure Container Apps - Production environment"
+          echo "This step requires Azure credentials and Container Apps configuration"
+          # Uncomment and configure when ready for production:
+          # az containerapp update \
+          #   --name agentic-shopper-coordinator-prod \
+          #   --resource-group agentic-shopper-prod \
+          #   --image ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}-coordinator:latest
