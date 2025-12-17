@@ -127,13 +127,27 @@ createdb agentic_shopper
 # "ConnectionStrings:DefaultConnection": "Host=localhost;Database=agentic_shopper;Username=your_user;Password=your_password"
 ```
 
-#### 3. Configure Azure Services
+#### 3. Configure Azure Services & JWT Authentication
 ```bash
 # Set environment variables for Azure services
 export AZURE_OPENAI_ENDPOINT="https://your-foundry.openai.azure.com/"
 export AZURE_OPENAI_DEPLOYMENT_NAME="gpt-4o-mini"
 export AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT="https://your-region.api.cognitive.microsoft.com/"
 export AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=..."
+
+# Configure JWT settings in appsettings.Development.json
+# "JwtSettings": {
+#   "SecretKey": "<generate-256-bit-base64-key>",
+#   "Issuer": "AgenticShopper",
+#   "Audience": "AgenticShopperUsers",
+#   "ExpiresInMinutes": 60
+# }
+
+# Generate a secure JWT secret key (PowerShell)
+$bytes = New-Object byte[] 32; (New-Object Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes); [Convert]::ToBase64String($bytes)
+
+# Or using OpenSSL
+openssl rand -base64 32
 ```
 
 #### 4. Run Backend
@@ -154,6 +168,81 @@ npm start
 ```
 
 Frontend runs at: `http://localhost:3000`
+
+---
+
+## 📡 API Endpoints
+
+### Authentication (JWT)
+```bash
+# Login and get JWT token
+POST /api/auth/login
+Content-Type: application/json
+{
+  "userId": "123",
+  "familyId": "456",
+  "email": "user@example.com",
+  "role": "admin"
+}
+
+# Response
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "expiresAt": "2025-12-17T14:30:00Z"
+}
+
+# Use token in subsequent requests
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+
+# For SignalR WebSocket connections
+wss://localhost:5001/hubs/shopping?access_token=eyJhbGciOiJIUzI1NiIs...
+```
+
+### Data Export (CSV)
+```bash
+# Export single shopping list
+GET /api/export/shopping-list/{listId}
+Authorization: Bearer {token}
+# Returns: text/csv file download
+
+# Batch export shopping lists
+POST /api/export/shopping-lists
+Content-Type: application/json
+Authorization: Bearer {token}
+{
+  "listIds": ["list1", "list2", "list3"]
+}
+
+# Export receipt with purchases
+GET /api/export/receipt/{receiptId}
+Authorization: Bearer {token}
+
+# Export receipts in date range
+GET /api/export/receipts?familyId={id}&startDate=2025-01-01&endDate=2025-12-31
+Authorization: Bearer {token}
+
+# Export products (all or by category)
+GET /api/export/products?familyId={id}&categoryId={categoryId}
+Authorization: Bearer {token}
+
+# Export budgets
+GET /api/export/budgets/{familyId}
+Authorization: Bearer {token}
+```
+
+### Receipt Management
+```bash
+# Delete receipt (soft delete - archives)
+DELETE /api/receipts/{id}?force=false
+Authorization: Bearer {token}
+# Returns: 400 Bad Request if receipt is verified (unless force=true)
+# Changes status to Archived instead of removing from database
+
+# Permanent delete (admin only)
+DELETE /api/receipts/permanent/{id}
+Authorization: Bearer {token}
+# Hard deletes receipt from database
+```
 
 ---
 
@@ -319,18 +408,142 @@ npm run test:coverage
 
 ---
 
-## 📖 Project Structure
+## � CI/CD Pipelines
+
+### Automated Workflows (GitHub Actions)
+
+#### Backend Pipeline (`.github/workflows/ci-backend.yml`)
+
+**Triggers:** Push to `main`, `develop`, `feature/*` branches and pull requests
+
+**Jobs:**
+1. **Build**: .NET 10 restore, build, basic tests
+2. **Test**: Unit & integration tests with code coverage
+   - PostgreSQL service container for integration tests
+   - Test result reporting
+   - Codecov integration for coverage tracking
+3. **Security**: Vulnerability scanning (`dotnet list package --vulnerable`)
+4. **Docker**: Multi-service builds using matrix strategy
+   - Services: coordinator, agent
+   - Docker layer caching for faster builds
+   - Push to GitHub Container Registry (GHCR)
+5. **Deploy**: Multi-environment deployments
+   - dev → staging → production
+   - Environment-specific secrets and configurations
+   - Health checks after deployment
+
+**Running locally:**
+```bash
+# Install act for local GitHub Actions testing
+choco install act-cli  # Windows
+brew install act       # macOS
+
+# Run backend workflow locally
+act -W .github/workflows/ci-backend.yml
+```
+
+#### Frontend Pipeline (`.github/workflows/ci-frontend.yml`)
+
+**Triggers:** Push to `main`, `develop`, `feature/*` branches and pull requests
+
+**Jobs:**
+1. **Lint**: ESLint and Prettier checks
+2. **Test**: npm test with test result reporting
+3. **Build**: Production build with artifact upload
+4. **Security**: npm audit for dependency vulnerabilities
+5. **Docker**: Multi-stage build with nginx
+   - nginx 1.25-alpine base image
+   - API proxy configuration for `/api` and `/hubs`
+   - gzip compression enabled
+   - WebSocket support for SignalR
+6. **Deploy**: Environment-based deployments
+   - dev → staging → production
+   - nginx configuration per environment
+
+**Running locally:**
+```bash
+# Run frontend workflow locally
+act -W .github/workflows/ci-frontend.yml
+```
+
+### Docker Image Registry
+
+**GitHub Container Registry (GHCR):**
+- Backend Coordinator: `ghcr.io/nileshgule/agentic-shopper-coordinator:latest`
+- Backend Agents: `ghcr.io/nileshgule/agentic-shopper-agents:latest`
+- Frontend: `ghcr.io/nileshgule/agentic-shopper-frontend:latest`
+
+**Pull images:**
+```bash
+# Authenticate to GHCR
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+
+# Pull images
+docker pull ghcr.io/nileshgule/agentic-shopper-coordinator:latest
+docker pull ghcr.io/nileshgule/agentic-shopper-agents:latest
+docker pull ghcr.io/nileshgule/agentic-shopper-frontend:latest
+```
+
+### Deployment Secrets
+
+**Required GitHub Secrets:**
+```bash
+# Azure credentials for deployment
+AZURE_CREDENTIALS
+AZURE_SUBSCRIPTION_ID
+AZURE_RESOURCE_GROUP
+
+# JWT configuration
+JWT_SECRET_KEY
+JWT_ISSUER
+JWT_AUDIENCE
+
+# Database
+DATABASE_CONNECTION_STRING
+
+# Azure services
+AZURE_OPENAI_ENDPOINT
+AZURE_OPENAI_KEY
+AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
+AZURE_DOCUMENT_INTELLIGENCE_KEY
+AZURE_STORAGE_CONNECTION_STRING
+
+# Container registry
+GHCR_TOKEN
+```
+
+**Set secrets via GitHub CLI:**
+```bash
+gh secret set JWT_SECRET_KEY --body "$(openssl rand -base64 32)"
+gh secret set DATABASE_CONNECTION_STRING --body "Host=...;Database=...;Username=...;Password=..."
+```
+
+---
+
+## �📖 Project Structure
 
 ```
 agentic-shopper/
 ├── backend/
 │   ├── src/
 │   │   ├── AgenticShopper.Coordinator/      # Workflow orchestration
+│   │   │   ├── Controllers/                 # REST API endpoints
+│   │   │   │   ├── AuthController.cs        # JWT login/refresh
+│   │   │   │   ├── ExportController.cs      # CSV data export
+│   │   │   │   └── ReceiptsController.cs    # Receipt management (w/ soft delete)
+│   │   │   └── Middleware/                  # Custom middleware
+│   │   │       └── JwtAuthenticationMiddleware.cs  # JWT validation
 │   │   ├── AgenticShopper.Agents.*/         # 6 autonomous agents
 │   │   ├── AgenticShopper.Core/             # Shared models + abstractions
+│   │   │   └── Services/
+│   │   │       └── CsvExportService.cs      # CSV export service
 │   │   └── AgenticShopper.Data/             # EF Core + repositories
 │   ├── tests/                               # Unit + Integration tests
 │   └── deployment/                          # Docker + K8s + Azure configs
+├── .github/
+│   └── workflows/                           # CI/CD pipelines
+│       ├── ci-backend.yml                   # Backend workflow
+│       └── ci-frontend.yml                  # Frontend workflow
 ├── frontend/
 │   ├── src/
 │   │   ├── components/                      # React components
@@ -362,6 +575,26 @@ agentic-shopper/
 - PostgreSQL database with EF Core migrations
 - Azure Blob Storage integration for receipt images
 - LLM provider abstraction (Foundry Local + Azure AI Foundry)
+- **JWT Authentication** ✅ (Commit fb9b836)
+  - JwtAuthenticationMiddleware with comprehensive token validation
+  - AuthController with login, refresh, and test endpoints
+  - SignalR WebSocket support via query string token
+  - NuGet packages: Microsoft.AspNetCore.Authentication.JwtBearer v10.0.1
+- **CI/CD Pipelines** ✅ (Commit b97c9a0)
+  - Backend workflow: build, test (coverage), security scan, Docker multi-service builds, multi-environment deployment
+  - Frontend workflow: lint, test, build, security audit, Docker with nginx, deployments
+  - GitHub Actions integration with GHCR (GitHub Container Registry)
+  - Automated testing with Codecov integration
+- **Data Export** ✅ (Commit 5f7001f)
+  - CSV export functionality for shopping lists, receipts, products, budgets
+  - CsvExportService with proper RFC 4180 escaping
+  - ExportController with 6 REST API endpoints
+  - Family-scoped access control
+- **Receipt Deletion** ✅ (Commit 5f7001f)
+  - Soft delete implementation with status-based archival
+  - Protection against deleting verified receipts (force flag override)
+  - Permanent delete endpoint for administrative use
+  - Maintains audit trail and referential integrity
 
 **User Story 1: Receipt Processing (FR-001 to FR-009)** ✅
 - Receipt Agent with OCR + parsing capabilities
@@ -549,11 +782,16 @@ See [specs/001-shopping-analyzer/plan.md](specs/001-shopping-analyzer/plan.md) f
 
 ## 🔐 Security & Privacy
 
-- **Authentication**: JWT-based auth (planned - T022)
-- **Authorization**: Family-based access control
+- **Authentication**: JWT Bearer tokens with HS256 signing ✅
+  - Custom middleware for token validation
+  - Support for both Authorization header and query string (SignalR WebSocket)
+  - Role-based claims (userId, familyId, role: admin/member)
+  - Configurable token expiration (default: 60 minutes)
+  - Refresh token capability
+- **Authorization**: Family-based access control with JWT claims
 - **Data Encryption**: TLS in transit, encrypted at rest (Azure Storage)
 - **PII Handling**: Receipt images stored securely in Azure Blob Storage
-- **API Security**: Rate limiting, CORS policies, input validation
+- **API Security**: JWT authentication, CORS policies, input validation, rate limiting (planned)
 
 ---
 
@@ -606,11 +844,47 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Last Updated**: December 13, 2025  
+**Last Updated**: December 17, 2025  
 **Branch**: `001-shopping-analyzer`  
-**Build Status**: 🟢 Passing (Backend) | 🟢 Passing (Frontend)
+**Build Status**: 🟢 Passing (Backend) | 🟢 Passing (Frontend) | 🟢 CI/CD Active
 
 **Recent Updates:**
+
+**Commit b97c9a0** (T192-T193 Complete - CI/CD Pipelines):
+- ✅ Backend CI/CD workflow with build, test, security, Docker, deploy jobs
+- ✅ Frontend CI/CD workflow with lint, test, build, security, Docker, deploy jobs
+- ✅ Multi-environment deployments (dev → staging → production)
+- ✅ GitHub Container Registry integration for Docker images
+- ✅ Codecov integration for test coverage tracking
+- ✅ PostgreSQL service container for integration tests
+- ✅ Docker multi-service builds with matrix strategy (coordinator, agent)
+- ✅ nginx configuration with API proxy and WebSocket support
+- ✅ Security scanning: dotnet vulnerabilities + npm audit
+- ✅ 524 lines of GitHub Actions workflow configuration
+
+**Commit 5f7001f** (T185-T186 Complete - Data Export & Soft Delete):
+- ✅ CsvExportService with 6 export methods (284 lines)
+- ✅ ExportController with 6 REST API endpoints (229 lines)
+- ✅ CSV export for shopping lists, receipts, products, budgets
+- ✅ Proper RFC 4180 CSV escaping (commas, quotes, newlines)
+- ✅ Family-scoped access control with JWT authorization
+- ✅ Receipt soft delete implementation (archive instead of delete)
+- ✅ Protection against deleting verified receipts (force flag override)
+- ✅ Permanent delete endpoint for administrative use
+- ✅ Maintains audit trail and referential integrity
+- ✅ 513 lines of export and deletion code
+
+**Commit fb9b836** (T022 Complete - JWT Authentication):
+- ✅ JwtAuthenticationMiddleware with comprehensive token validation (150 lines)
+- ✅ AuthController with login, refresh, test endpoints (120 lines)
+- ✅ JWT Bearer authentication configuration in Program.cs
+- ✅ SignalR WebSocket support via query string token (`?access_token=...`)
+- ✅ Role-based claims (userId, familyId, role: admin/member)
+- ✅ Token extraction from both Authorization header and query string
+- ✅ Configurable JWT settings in appsettings.json
+- ✅ NuGet packages: Microsoft.AspNetCore.Authentication.JwtBearer v10.0.1
+- ✅ System.IdentityModel.Tokens.Jwt v8.3.1
+- ✅ 270+ lines of authentication infrastructure
 
 **Commit 1e45d8a** (Azure Document Intelligence OCR Integration):
 - ✅ Implemented real Azure.AI.FormRecognizer 4.1.0 SDK integration
@@ -807,8 +1081,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Auto/manual visual indicators with emoji badges (🤖 vs 👤)
 
 **Implementation Progress**:
-- Tasks Completed: T001-T153 (153/200 tasks = 76.5%)
-- User Stories: 5 Complete ✅ | 1 In Progress 🚧 (US4: 87%) | 2 Planned 📋
+- Tasks Completed: T001-T193 (183/200 tasks = 91.5%) ⬆️ +6 tasks this session
+- User Stories: 5 Complete ✅ | 1 In Progress 🚧 (US4: 83%) | 2 Planned 📋
 - Backend Agents: 6/6 Complete (Receipt ✅, Categorization ✅, Frequency ✅, ListGenerator ✅, PriceComparison 🚧, Budget ✅)
 - Frontend Pages: 5/7 (Receipts ✅, Products ✅, Shopping Lists ✅, Price Comparison 🚧, Analytics ✅)
-- Lines of Code: ~27,500+ (backend + frontend)
+- Infrastructure: JWT Auth ✅, CSV Export ✅, Soft Delete ✅, CI/CD Pipelines ✅
+- Lines of Code: ~29,800+ (backend + frontend + CI/CD) ⬆️ +2,300 lines this session
