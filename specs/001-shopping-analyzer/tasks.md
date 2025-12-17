@@ -313,8 +313,8 @@
 - [ ] T182 [P] Add comprehensive error logging across all agents
 - [ ] T183 [P] Implement Application Insights telemetry in all services
 - [ ] T184 [P] Add request/response logging middleware
-- [ ] T185 Add data export (CSV) functionality (FR-049) in CoordinatorAgent
-- [ ] T186 Add receipt deletion functionality (FR-050) in ReceiptController
+- [X] T185 Add data export (CSV) functionality (FR-049) in CoordinatorAgent
+- [X] T186 Add receipt deletion functionality (FR-050) in ReceiptsController
 - [X] T187 [P] Add loading states and skeleton screens in all frontend components
 - [X] T188 [P] Implement toast notifications for user feedback across UI
 - [ ] T189 [P] Add responsive design CSS for mobile devices

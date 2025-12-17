@@ -50,6 +50,7 @@ try
     // Register services
     builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
     builder.Services.AddScoped<IOcrService, CompositeOcrService>();
+    builder.Services.AddScoped<CsvExportService>();
     
     // TODO: Register LLM provider when needed
     // builder.Services.AddScoped<ILlmProvider>(sp => LlmProviderFactory.Create(...));

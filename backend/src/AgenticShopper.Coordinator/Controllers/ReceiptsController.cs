@@ -401,19 +401,22 @@ public class ReceiptsController : ControllerBase
     }
 
     /// <summary>
-    /// Delete a receipt
+    /// Delete a receipt (FR-050)
+    /// Implements soft delete - verified receipts cannot be deleted
     /// </summary>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteReceipt(
         Guid id,
-        CancellationToken cancellationToken)
+        [FromQuery] bool force = false,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            _logger.LogInformation("Deleting receipt {ReceiptId}", id);
+            _logger.LogInformation("Deleting receipt {ReceiptId} (force: {Force})", id, force);
 
             var receipt = await _receiptRepository.GetByIdAsync(id, cancellationToken);
             if (receipt == null)
@@ -422,9 +425,29 @@ public class ReceiptsController : ControllerBase
                 return NotFound(new { error = $"Receipt {id} not found" });
             }
 
-            await _receiptRepository.DeleteAsync(id, cancellationToken);
+            // FR-050: Prevent deletion of verified receipts unless force flag is set
+            if (receipt.Status == ReceiptStatus.Verified && !force)
+            {
+                _logger.LogWarning(
+                    "Attempted to delete verified receipt {ReceiptId} without force flag",
+                    id);
+                return BadRequest(new
+                {
+                    error = "Cannot delete verified receipt. Use force=true query parameter to override.",
+                    receiptStatus = receipt.Status.ToString(),
+                    verifiedDate = receipt.VerifiedDate
+                });
+            }
 
-            _logger.LogInformation("Receipt {ReceiptId} deleted successfully", id);
+            // Soft delete: Update status to Archived instead of physical deletion
+            // This preserves data for historical records and analysis
+            receipt.Status = ReceiptStatus.Archived;
+            await _receiptRepository.UpdateAsync(receipt, cancellationToken);
+
+            _logger.LogInformation(
+                "Receipt {ReceiptId} soft-deleted (archived) successfully",
+                id);
+
             return NoContent();
         }
         catch (Exception ex)
@@ -433,6 +456,44 @@ public class ReceiptsController : ControllerBase
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { error = "An error occurred while deleting the receipt" });
+        }
+    }
+
+    /// <summary>
+    /// Permanently delete a receipt (admin only)
+    /// This is a hard delete that removes the receipt from the database
+    /// </summary>
+    [HttpDelete("{id}/permanent")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> PermanentlyDeleteReceipt(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogWarning("Permanently deleting receipt {ReceiptId}", id);
+
+            var receipt = await _receiptRepository.GetByIdAsync(id, cancellationToken);
+            if (receipt == null)
+            {
+                _logger.LogWarning("Receipt {ReceiptId} not found", id);
+                return NotFound(new { error = $"Receipt {id} not found" });
+            }
+
+            // Hard delete - removes from database
+            await _receiptRepository.DeleteAsync(id, cancellationToken);
+
+            _logger.LogWarning("Receipt {ReceiptId} permanently deleted", id);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error permanently deleting receipt {ReceiptId}", id);
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new { error = "An error occurred while permanently deleting the receipt" });
         }
     }
 
