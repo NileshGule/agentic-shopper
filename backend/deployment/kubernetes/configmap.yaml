@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agentic-shopper-config
+  namespace: agentic-shopper
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  JwtSettings__Issuer: "AgenticShopper"
+  JwtSettings__Audience: "AgenticShopperUsers"
+  JwtSettings__ExpiresInMinutes: "60"
+  LLM__Provider: "AzureAIFoundry"
+  LLM__Timeout: "30"
+  Cors__AllowedOrigins: "https://agentic-shopper.example.com"
+  AzureStorage__ContainerName: "receipts"
+  Redis__InstanceName: "AgenticShopper:"

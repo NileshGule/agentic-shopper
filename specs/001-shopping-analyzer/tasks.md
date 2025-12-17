@@ -318,7 +318,7 @@
 - [X] T187 [P] Add loading states and skeleton screens in all frontend components
 - [X] T188 [P] Implement toast notifications for user feedback across UI
 - [ ] T189 [P] Add responsive design CSS for mobile devices
-- [ ] T190 Setup Kubernetes manifests in backend/deployment/kubernetes/
+- [X] T190 Setup Kubernetes manifests in backend/deployment/kubernetes/
 - [ ] T191 [P] Setup Azure Container Apps Bicep templates in backend/deployment/azure/
 - [X] T192 [P] Create CI/CD pipeline in .github/workflows/ci-backend.yml
 - [X] T193 [P] Create CI/CD pipeline in .github/workflows/ci-frontend.yml

@@ -1,0 +1,79 @@
+# NGINX Ingress Controller configuration
+# Install: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/cloud/deploy.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agentic-shopper-ingress
+  namespace: agentic-shopper
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    # Enable WebSocket support for SignalR
+    nginx.ingress.kubernetes.io/websocket-services: "coordinator-service"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://agentic-shopper.example.com"
+    # TLS certificate (use cert-manager for automatic SSL)
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - agentic-shopper.example.com
+    - api.agentic-shopper.example.com
+    secretName: agentic-shopper-tls
+  rules:
+  # Frontend
+  - host: agentic-shopper.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
+  # Backend API
+  - host: api.agentic-shopper.example.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: coordinator-service
+            port:
+              number: 80
+      - path: /hubs
+        pathType: Prefix
+        backend:
+          service:
+            name: coordinator-service
+            port:
+              number: 80
+      - path: /swagger
+        pathType: Prefix
+        backend:
+          service:
+            name: coordinator-service
+            port:
+              number: 80
+      - path: /health
+        pathType: Prefix
+        backend:
+          service:
+            name: coordinator-service
+            port:
+              number: 80

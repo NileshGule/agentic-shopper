@@ -1,0 +1,51 @@
+# Kustomize configuration for deployment customization
+# Usage: kubectl apply -k backend/deployment/kubernetes/
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: agentic-shopper
+
+resources:
+- namespace.yaml
+- configmap.yaml
+- secrets.yaml
+- postgresql-deployment.yaml
+- redis-deployment.yaml
+- coordinator-deployment.yaml
+- frontend-deployment.yaml
+- ingress.yaml
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: agentic-shopper
+  app.kubernetes.io/version: "1.0.0"
+  app.kubernetes.io/managed-by: kustomize
+
+# Common annotations
+commonAnnotations:
+  description: "AI-powered shopping pattern analyzer and recommender"
+  team: "agentic-shopper-team"
+  contact: "nilesh.gule@example.com"
+
+# Image tag overrides (for CI/CD)
+images:
+- name: ghcr.io/nileshgule/agentic-shopper-coordinator
+  newTag: latest
+- name: ghcr.io/nileshgule/agentic-shopper-frontend
+  newTag: latest
+
+# Replica count overrides per environment
+# Override in overlays: kustomize edit set replicas coordinator=5
+replicas:
+- name: coordinator
+  count: 3
+- name: frontend
+  count: 2
+
+# Configuration overrides
+configMapGenerator:
+- name: agentic-shopper-config
+  behavior: merge
+  literals:
+  - DEPLOYMENT_TIME=$(date +%Y-%m-%dT%H:%M:%S%Z)
