@@ -10,6 +10,7 @@ using AgenticShopper.Core.Models;
 using AgenticShopper.Core.Services;
 using AgenticShopper.Data;
 using AgenticShopper.Data.Repositories;
+using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -123,6 +124,14 @@ try
         options.InstanceName = builder.Configuration.GetValue<string>("Redis:InstanceName");
     });
 
+    // Configure rate limiting (DDoS protection, brute force prevention)
+    builder.Services.AddMemoryCache();
+    builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+    builder.Services.Configure<IpRateLimitPolicies>(builder.Configuration.GetSection("IpRateLimitPolicies"));
+    builder.Services.Configure<ClientRateLimitOptions>(builder.Configuration.GetSection("ClientRateLimiting"));
+    builder.Services.AddInMemoryRateLimiting();
+    builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
     // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
     builder.Services.AddOpenApi();
     builder.Services.AddEndpointsApiExplorer();
@@ -149,6 +158,10 @@ try
     }
 
     app.UseHttpsRedirection();
+
+    // Use rate limiting middleware (MUST be before CORS, Authentication, Authorization)
+    app.UseIpRateLimiting();
+    app.UseClientRateLimiting();
 
     app.UseCors();
 
