@@ -43,7 +43,7 @@ services:
   # Coordinator Service
   coordinator:
     build:
-      context: ../..
+      context: ../../
       dockerfile: deployment/docker/Dockerfile.coordinator
     image: agentic-shopper-coordinator:latest
     container_name: agentic-shopper-coordinator

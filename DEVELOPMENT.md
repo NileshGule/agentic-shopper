@@ -6,30 +6,62 @@ This guide explains how to run Agentic Shopper locally using Docker containers i
 
 ### Prerequisites
 - Docker Desktop installed and running
-- .NET 10 SDK
-- Node.js 18+ (for frontend)
+- .NET 10 SDK (for local development without Docker)
+- Node.js 20+ (for frontend development without Docker)
 
-### Start Local Services
+### Start Everything with Docker Compose (Recommended)
+
+The easiest way to get the full application running locally:
 
 ```bash
-# Start all local development services
-docker-compose -f docker-compose.dev.yml up -d
+# Build and start all services
+docker compose -f docker-compose.local.yml up --build -d
 
-# Verify all services are running
-docker-compose -f docker-compose.dev.yml ps
+# Verify all services are running and healthy
+docker compose -f docker-compose.local.yml ps
 
 # View logs
-docker-compose -f docker-compose.dev.yml logs -f
+docker compose -f docker-compose.local.yml logs -f
+
+# View specific service logs
+docker compose -f docker-compose.local.yml logs -f coordinator
 ```
 
-### Stop Local Services
+> **Auto-setup on first start**: The coordinator automatically creates the database schema, seeds predefined categories/stores, and creates a demo family + user for testing. No manual migration or seeding is required.
+
+Services available at:
+| Service | URL | Purpose |
+|---------|-----|---------|
+| **Frontend** | http://localhost:3000 | React UI served by nginx |
+| **Coordinator API** | http://localhost:5050 | .NET backend API |
+| **Health Check** | http://localhost:5050/health | Backend health status |
+| **PostgreSQL** | localhost:5432 | Database |
+| **Redis** | localhost:6379 | Caching |
+| **Azurite** | localhost:10000-10002 | Azure Blob Storage emulator |
+
+> **macOS Note**: Port 5000 is reserved by AirPlay Receiver. The coordinator uses port **5050** instead.
+
+### Start Infrastructure Only (for local .NET/Node dev)
+
+```bash
+# Start only infrastructure services
+docker compose -f docker-compose.dev.yml up -d
+
+# Verify all services are running
+docker compose -f docker-compose.dev.yml ps
+
+# View logs
+docker compose -f docker-compose.dev.yml logs -f
+```
+
+### Stop Services
 
 ```bash
 # Stop all services
-docker-compose -f docker-compose.dev.yml down
+docker compose -f docker-compose.local.yml down
 
 # Stop and remove volumes (clean slate)
-docker-compose -f docker-compose.dev.yml down -v
+docker compose -f docker-compose.local.yml down -v
 ```
 
 ---
@@ -86,10 +118,28 @@ Host=localhost;Database=agentic_shopper;Username=postgres;Password=postgres;Port
 docker exec -it agentic-shopper-postgres psql -U postgres -d agentic_shopper
 ```
 
-**Run Migrations**:
+**Database Schema**:
+
+The schema is auto-created on startup via `EnsureCreated()` — no manual migration is required. To reset the database, stop the coordinator, drop all tables (or remove the volume), and restart:
+
 ```bash
-cd backend/src/AgenticShopper.Coordinator
-dotnet ef database update
+# Full reset (drops all data)
+docker compose -f docker-compose.local.yml down -v
+docker compose -f docker-compose.local.yml up --build -d
+```
+
+**Demo Data (Auto-Seeded)**:
+
+On startup, the coordinator seeds:
+- **11 predefined categories**: Dairy, Fresh Produce, Meat & Seafood, Bakery, Pantry & Groceries, Frozen Foods, Beverages, Household & Cleaning, Personal Care, Pet Supplies, Other
+- **2 stores**: Coles, Woolworths
+- **Demo family**: `00000000-0000-0000-0000-000000000001` ("Demo Family")
+- **Demo user**: `00000000-0000-0000-0000-000000000001` ("Demo User" / demo@example.com)
+
+**Verify seeded data**:
+```bash
+docker exec agentic-shopper-postgres psql -U postgres -d agentic_shopper \
+  -c 'SELECT "Id","Name" FROM "FamilyAccounts"; SELECT "Id","Name","Email" FROM "UserProfiles";'
 ```
 
 ### 3. Redis Cache
@@ -296,6 +346,23 @@ docker logs agentic-shopper-postgres
 docker restart agentic-shopper-postgres
 ```
 
+### Receipt upload returns 500 — FK constraint violation
+If you see `FK_Receipts_UserProfiles_UploadedBy` in the logs, the demo user hasn't been seeded. The coordinator seeds demo data automatically on startup. To fix:
+```bash
+# Reset and rebuild (this re-creates the schema and seeds demo data)
+docker compose -f docker-compose.local.yml down -v
+docker compose -f docker-compose.local.yml up --build -d
+```
+
+### Receipt upload returns 400
+Ensure you're sending valid GUIDs for `familyId` and `uploadedBy`. The demo GUID is:
+```
+00000000-0000-0000-0000-000000000001
+```
+
+### ObjectDisposedException in background tasks
+This was fixed by using `IServiceScopeFactory` in the controller to create a new DI scope for background work (frequency recalculation). If you see this error, ensure you're running the latest code.
+
 ### PaddleOCR not found
 ```bash
 # Verify installation
@@ -321,14 +388,14 @@ docker restart agentic-shopper-redis
 
 ### View All Container Logs
 ```bash
-docker-compose -f docker-compose.dev.yml logs -f
+docker compose -f docker-compose.local.yml logs -f
 ```
 
 ### View Specific Service Logs
 ```bash
-docker-compose -f docker-compose.dev.yml logs -f postgres
-docker-compose -f docker-compose.dev.yml logs -f azurite
-docker-compose -f docker-compose.dev.yml logs -f redis
+docker compose -f docker-compose.local.yml logs -f coordinator
+docker compose -f docker-compose.local.yml logs -f postgres
+docker compose -f docker-compose.local.yml logs -f redis
 ```
 
 ### Check Resource Usage
@@ -364,26 +431,42 @@ docker exec agentic-shopper-rabbitmq rabbitmq-diagnostics ping
 
 ## 🚀 Full Development Workflow
 
+### Option A: Full Stack via Docker (Recommended)
+
+```bash
+# 1. Start everything
+docker compose -f docker-compose.local.yml up --build -d
+
+# 2. Verify health
+curl http://localhost:5050/health
+
+# 3. Test receipt upload
+curl -X POST http://localhost:5050/api/receipts/upload \
+  -F "file=@path/to/receipt.jpg" \
+  -F "familyId=00000000-0000-0000-0000-000000000001" \
+  -F "uploadedBy=00000000-0000-0000-0000-000000000001"
+
+# 4. Open the frontend
+open http://localhost:3000   # macOS
+# xdg-open http://localhost:3000  # Linux
+```
+
+### Option B: Infrastructure via Docker + Local .NET/Node
+
 ### 1. Start Services
 ```bash
-docker-compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 ```
 
-### 2. Run Database Migrations
-```bash
-cd backend/src/AgenticShopper.Coordinator
-dotnet ef database update
-```
-
-### 3. Start Backend
+### 2. Start Backend (database schema auto-created on startup)
 ```bash
 cd backend/src/AgenticShopper.Coordinator
 dotnet run
 ```
 
-Backend will run on: `https://localhost:7135`
+Backend will run on: `http://localhost:5050`
 
-### 4. Start Frontend
+### 3. Start Frontend
 ```bash
 cd frontend
 npm install
@@ -392,8 +475,8 @@ npm run dev
 
 Frontend will run on: `http://localhost:5173`
 
-### 5. Access Services
-- **Backend API**: https://localhost:7135/swagger
+### 4. Access Services
+- **Backend API / Swagger**: http://localhost:5050
 - **Frontend**: http://localhost:5173
 - **RabbitMQ UI**: http://localhost:15672 (admin/admin)
 - **PostgreSQL**: `localhost:5432`

@@ -1,4 +1,5 @@
 using AgenticShopper.Agents.ListGenerator;
+using AgenticShopper.Core.Models;
 using AgenticShopper.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 

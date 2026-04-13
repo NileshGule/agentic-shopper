@@ -85,7 +85,7 @@ export const LineChart: React.FC<LineChartProps> = ({
       tooltip: {
         callbacks: {
           label: (context) => {
-            return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
+            return `${context.dataset.label}: $${context.parsed.y?.toFixed(2) ?? '0.00'}`;
           }
         }
       }
@@ -142,7 +142,7 @@ export const BarChart: React.FC<BarChartProps> = ({
       tooltip: {
         callbacks: {
           label: (context) => {
-            return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
+            return `${context.dataset.label}: $${context.parsed.y?.toFixed(2) ?? '0.00'}`;
           }
         }
       }

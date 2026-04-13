@@ -11,6 +11,7 @@ import {
   AddItemRequest,
   ItemUrgency 
 } from '../services/api/shoppingListApi';
+import { DEMO_FAMILY_ID, DEMO_USER_ID } from '../constants/demo';
 import './ShoppingListsPage.css';
 
 export default function ShoppingListsPage() {
@@ -23,8 +24,8 @@ export default function ShoppingListsPage() {
   const toast = useToast();
 
   // TODO: Replace with actual user/family data from auth context
-  const familyId = 'demo-family-id';
-  const userId = 'demo-user-id';
+  const familyId = DEMO_FAMILY_ID;
+  const userId = DEMO_USER_ID;
 
   useEffect(() => {
     loadLists();
@@ -80,7 +81,7 @@ export default function ShoppingListsPage() {
       // Refresh selected list
       const updatedList = await shoppingListApi.getListById(selectedList.id);
       setSelectedList(updatedList);
-      toast.showSuccess(`Added "${item.productName}" to list`);
+      toast.showSuccess(`Added item to list`);
     } catch (err) {
       toast.showError(err instanceof Error ? err.message : 'Failed to add item');
       throw err;
@@ -177,10 +178,6 @@ export default function ShoppingListsPage() {
       const errorMsg = err instanceof Error ? err.message : 'Failed to copy list';
       setError(errorMsg);
       toast.showError(errorMsg);
-    }
-  };
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to copy list');
     }
   };
 

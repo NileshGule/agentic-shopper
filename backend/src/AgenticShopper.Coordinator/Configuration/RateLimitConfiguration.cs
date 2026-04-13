@@ -6,7 +6,7 @@ namespace AgenticShopper.Coordinator.Configuration;
 /// Configuration class for API rate limiting using AspNetCoreRateLimit library.
 /// Provides DDoS protection, brute force prevention, and resource management.
 /// </summary>
-public static class RateLimitConfiguration
+public static class RateLimitSetup
 {
     /// <summary>
     /// Configure IP-based rate limiting for the application.
@@ -32,7 +32,7 @@ public static class RateLimitConfiguration
         services.AddInMemoryRateLimiting();
         
         // Rate limit configuration provider
-        services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+        services.AddSingleton<IRateLimitConfiguration, AspNetCoreRateLimit.RateLimitConfiguration>();
     }
     
     /// <summary>

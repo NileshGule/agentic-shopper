@@ -262,7 +262,7 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
 
             <div className="form-group">
               <label>
-                Alert Threshold ({(formData.alertThreshold * 100).toFixed(0)}%)
+                Alert Threshold ({((formData.alertThreshold ?? 0) * 100).toFixed(0)}%)
                 <span className="hint">Alert when spending reaches this percentage</span>
               </label>
               <input
@@ -270,7 +270,7 @@ export const BudgetTracker: React.FC<BudgetTrackerProps> = ({
                 min="50"
                 max="100"
                 step="5"
-                value={formData.alertThreshold * 100}
+                value={(formData.alertThreshold ?? 0.9) * 100}
                 onChange={(e) => setFormData({ ...formData, alertThreshold: parseInt(e.target.value) / 100 })}
               />
             </div>

@@ -4,6 +4,7 @@ import ReceiptList from '../components/receipts/ReceiptList';
 import ReceiptReview from '../components/receipts/ReceiptReview';
 import Button from '../components/common/Button';
 import { useToast } from '../components/common/ToastContext';
+import { DEMO_FAMILY_ID, DEMO_USER_ID } from '../constants/demo';
 
 type ViewMode = 'list' | 'upload' | 'review';
 
@@ -14,8 +15,8 @@ export default function ReceiptsPage() {
   const toast = useToast();
 
   // TODO: Replace with actual family ID from user context/auth
-  const familyId = 'demo-family-001';
-  const uploadedBy = 'demo-user-001';
+  const familyId = DEMO_FAMILY_ID;
+  const uploadedBy = DEMO_USER_ID;
 
   const handleUploadSuccess = (receiptId: string) => {
     // Automatically switch to review mode for new receipts

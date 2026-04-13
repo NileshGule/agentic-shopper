@@ -56,9 +56,9 @@ public class CategorizationAgent : AgentBase
     public override string Description => "Automatically categorizes products using LLM-powered classification";
 
     public CategorizationAgent(
-        IChatClient? chatClient,
         ApplicationDbContext dbContext,
-        ILogger<CategorizationAgent> logger)
+        ILogger<CategorizationAgent> logger,
+        IChatClient? chatClient = null)
         : base(logger, chatClient)
     {
         _classifier = new CategoryClassifier(chatClient, logger);

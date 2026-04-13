@@ -17,18 +17,21 @@ public class ReceiptsController : ControllerBase
     private readonly IRepository<Receipt> _receiptRepository;
     private readonly FrequencyAgent _frequencyAgent;
     private readonly BudgetAgent? _budgetAgent;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public ReceiptsController(
         ILogger<ReceiptsController> logger,
         ReceiptAgent receiptAgent,
         IRepository<Receipt> receiptRepository,
         FrequencyAgent frequencyAgent,
+        IServiceScopeFactory scopeFactory,
         BudgetAgent? budgetAgent = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _receiptAgent = receiptAgent ?? throw new ArgumentNullException(nameof(receiptAgent));
         _receiptRepository = receiptRepository ?? throw new ArgumentNullException(nameof(receiptRepository));
         _frequencyAgent = frequencyAgent ?? throw new ArgumentNullException(nameof(frequencyAgent));
+        _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
         _budgetAgent = budgetAgent; // Optional for backward compatibility
     }
 
@@ -128,25 +131,33 @@ public class ReceiptsController : ControllerBase
 
             // T085 [FR-014]: Trigger frequency recalculation for products in this receipt
             // This happens asynchronously after receipt upload to update purchase frequency patterns
+            var receiptId = result.Data.ReceiptId;
+            var itemCount = result.Data.ItemCount;
             _ = Task.Run(async () =>
             {
+                // Create a new DI scope so that scoped services (DbContext, repositories)
+                // are not disposed when the HTTP request ends.
+                using var scope = _scopeFactory.CreateScope();
+                var receiptRepo = scope.ServiceProvider.GetRequiredService<IRepository<Receipt>>();
+                var freqAgent = scope.ServiceProvider.GetRequiredService<FrequencyAgent>();
+
                 try
                 {
                     _logger.LogInformation(
                         "Starting frequency recalculation for receipt {ReceiptId} with {ItemCount} items",
-                        result.Data.ReceiptId,
-                        result.Data.ItemCount);
+                        receiptId,
+                        itemCount);
 
                     // Get the full receipt with purchases
-                    var receiptWithPurchases = await _receiptRepository.GetByIdAsync(
-                        result.Data.ReceiptId,
+                    var receiptWithPurchases = await receiptRepo.GetByIdAsync(
+                        receiptId,
                         CancellationToken.None);
 
                     if (receiptWithPurchases?.Purchases == null || !receiptWithPurchases.Purchases.Any())
                     {
                         _logger.LogWarning(
                             "No purchases found for receipt {ReceiptId}, skipping frequency recalculation",
-                            result.Data.ReceiptId);
+                            receiptId);
                         return;
                     }
 
@@ -159,7 +170,7 @@ public class ReceiptsController : ControllerBase
                     _logger.LogInformation(
                         "Recalculating frequency for {ProductCount} unique products from receipt {ReceiptId}",
                         productIds.Count,
-                        result.Data.ReceiptId);
+                        receiptId);
 
                     // Trigger batch frequency calculation
                     var batchRequest = new BatchFrequencyRequest
@@ -168,7 +179,7 @@ public class ReceiptsController : ControllerBase
                         ForceRecalculate = true // Always recalculate when new purchase is added
                     };
 
-                    var frequencyResult = await _frequencyAgent.ExecuteAsync<BatchFrequencyRequest, FrequencyCalculationResponse>(
+                    var frequencyResult = await freqAgent.ExecuteAsync<BatchFrequencyRequest, FrequencyCalculationResponse>(
                         batchRequest,
                         CancellationToken.None);
 
@@ -177,13 +188,13 @@ public class ReceiptsController : ControllerBase
                         _logger.LogInformation(
                             "Successfully recalculated frequencies for {ProductCount} products from receipt {ReceiptId}",
                             productIds.Count,
-                            result.Data.ReceiptId);
+                            receiptId);
                     }
                     else
                     {
                         _logger.LogWarning(
                             "Frequency recalculation failed for receipt {ReceiptId}: {ErrorMessage}",
-                            result.Data.ReceiptId,
+                            receiptId,
                             frequencyResult.ErrorMessage);
                     }
                 }
@@ -192,7 +203,7 @@ public class ReceiptsController : ControllerBase
                     _logger.LogError(
                         ex,
                         "Error during background frequency recalculation for receipt {ReceiptId}",
-                        result.Data.ReceiptId);
+                        receiptId);
                 }
             }, CancellationToken.None);
 

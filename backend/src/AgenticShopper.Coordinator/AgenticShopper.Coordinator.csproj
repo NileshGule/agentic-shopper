@@ -26,9 +26,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AgenticShopper.Agents.Categorization\AgenticShopper.Agents.Categorization.csproj" />
-    <ProjectReference Include="..\AgenticShopper.Agents.Frequency\AgenticShopper.Agents.Frequency.csproj" />
-    <ProjectReference Include="..\AgenticShopper.Agents.Receipt\AgenticShopper.Agents.Receipt.csproj" />
+    <ProjectReference Include="..\AgenticShopper.Agents.Budget\AgenticShopper.Agents.Budget.csproj">
+      <ExcludeAssets>contentFiles</ExcludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\AgenticShopper.Agents.Categorization\AgenticShopper.Agents.Categorization.csproj">
+      <ExcludeAssets>contentFiles</ExcludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\AgenticShopper.Agents.Frequency\AgenticShopper.Agents.Frequency.csproj">
+      <ExcludeAssets>contentFiles</ExcludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\AgenticShopper.Agents.ListGenerator\AgenticShopper.Agents.ListGenerator.csproj">
+      <ExcludeAssets>contentFiles</ExcludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\AgenticShopper.Agents.PriceComparison\AgenticShopper.Agents.PriceComparison.csproj">
+      <ExcludeAssets>contentFiles</ExcludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\AgenticShopper.Agents.Receipt\AgenticShopper.Agents.Receipt.csproj">
+      <ExcludeAssets>contentFiles</ExcludeAssets>
+    </ProjectReference>
     <ProjectReference Include="..\AgenticShopper.Core\AgenticShopper.Core.csproj" />
     <ProjectReference Include="..\AgenticShopper.Data\AgenticShopper.Data.csproj" />
   </ItemGroup>

@@ -187,8 +187,8 @@ const ReceiptList: React.FC<ReceiptListProps> = ({
             <div key={receipt.id} className="receipt-card">
               <div className="card-header">
                 <h3 className="store-name">{receipt.storeName}</h3>
-                <span className={`status-badge ${getStatusBadgeClass(receipt.status)}`}>
-                  {getStatusLabel(receipt.status)}
+                <span className={`status-badge ${getStatusBadgeClass(receipt.status ?? '')}`}>
+                  {getStatusLabel(receipt.status ?? '')}
                 </span>
               </div>
 

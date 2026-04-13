@@ -1,7 +1,15 @@
 using System.Text;
+using AgenticShopper.Agents.Budget;
+using AgenticShopper.Agents.Budget.Services;
+using AgenticShopper.Agents.Categorization;
+using AgenticShopper.Agents.Frequency;
+using AgenticShopper.Agents.ListGenerator;
 using AgenticShopper.Agents.Receipt;
 using AgenticShopper.Agents.Receipt.Interfaces;
 using AgenticShopper.Agents.Receipt.Services;
+using AgenticShopper.Agents.PriceComparison;
+using AgenticShopper.Agents.PriceComparison.Interfaces;
+using AgenticShopper.Agents.PriceComparison.Services;
 using AgenticShopper.Coordinator.Hubs;
 using AgenticShopper.Coordinator.Middleware;
 using AgenticShopper.Core.Abstractions;
@@ -13,6 +21,7 @@ using AgenticShopper.Data.Repositories;
 using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
@@ -47,6 +56,35 @@ try
     builder.Services.AddScoped<IRepository<Receipt>, ReceiptRepository>();
     builder.Services.AddScoped<IRepository<Product>, ProductRepository>();
     builder.Services.AddScoped<ProductRepository>(); // For ProductController
+    builder.Services.AddScoped<PromotionRepository>(); // For PriceAgent
+    builder.Services.AddScoped<BudgetRepository>();
+    builder.Services.AddScoped<IRepository<Budget>, BudgetRepository>();
+    builder.Services.AddScoped<ShoppingListRepository>();
+    builder.Services.AddScoped<IRepository<ShoppingList>, ShoppingListRepository>();
+
+    // Register catalog services with Redis caching (T116, T117, T118)
+    builder.Services.AddHttpClient(); // For web scraping
+    
+    // Register base catalog services
+    builder.Services.AddScoped<ColesCatalogService>();
+    builder.Services.AddScoped<WoolworthsCatalogService>();
+    
+    // Register cached decorators
+    builder.Services.AddScoped<IStoreCatalogService>(sp =>
+    {
+        var colesService = sp.GetRequiredService<ColesCatalogService>();
+        var cache = sp.GetRequiredService<IDistributedCache>();
+        var logger = sp.GetRequiredService<ILogger<CachedStoreCatalogService>>();
+        return new CachedStoreCatalogService(colesService, cache, logger);
+    });
+    
+    builder.Services.AddScoped<IStoreCatalogService>(sp =>
+    {
+        var woolworthsService = sp.GetRequiredService<WoolworthsCatalogService>();
+        var cache = sp.GetRequiredService<IDistributedCache>();
+        var logger = sp.GetRequiredService<ILogger<CachedStoreCatalogService>>();
+        return new CachedStoreCatalogService(woolworthsService, cache, logger);
+    });
 
     // Register services
     builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
@@ -58,6 +96,15 @@ try
 
     // Register agents
     builder.Services.AddScoped<ReceiptAgent>();
+    builder.Services.AddScoped<PriceAgent>();
+    builder.Services.AddScoped<FrequencyAgent>();
+    builder.Services.AddScoped<CategorizationAgent>();
+    builder.Services.AddScoped<ListGeneratorAgent>();
+
+    // Register Budget agent services
+    builder.Services.AddScoped<SpendingAnalyzer>();
+    builder.Services.AddScoped<BudgetAlertService>();
+    builder.Services.AddScoped<BudgetAgent>();
 
     // Configure JWT Authentication
     var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -139,6 +186,50 @@ try
 
     var app = builder.Build();
 
+    // Auto-apply database migrations in Development
+    if (app.Environment.IsDevelopment())
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        try
+        {
+            Log.Information("Ensuring database is created...");
+            dbContext.Database.EnsureCreated();
+            Log.Information("Database schema ensured successfully");
+
+            // Seed demo data for local development
+            var demoFamilyId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+            if (!dbContext.FamilyAccounts.Any(f => f.Id == demoFamilyId))
+            {
+                Log.Information("Seeding demo family and user data...");
+                var family = new FamilyAccount
+                {
+                    Id = demoFamilyId,
+                    Name = "Demo Family",
+                    CreatedDate = DateTime.UtcNow
+                };
+                dbContext.FamilyAccounts.Add(family);
+
+                var user = new UserProfile
+                {
+                    Id = demoFamilyId,
+                    FamilyId = demoFamilyId,
+                    Name = "Demo User",
+                    Email = "demo@example.com",
+                    Role = UserRole.Admin,
+                    CreatedDate = DateTime.UtcNow
+                };
+                dbContext.UserProfiles.Add(user);
+                dbContext.SaveChanges();
+                Log.Information("Demo data seeded successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Database initialization failed — this is expected on first run if the database is still initializing");
+        }
+    }
+
     // Configure the HTTP request pipeline.
     // Use error handling middleware
     app.UseMiddleware<ErrorHandlingMiddleware>();
@@ -171,6 +262,9 @@ try
 
     app.MapControllers();
     app.MapHub<ShoppingListHub>("/hubs/shopping-list");
+
+    // Health check endpoint for Docker/Kubernetes
+    app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
     app.Run();
 }

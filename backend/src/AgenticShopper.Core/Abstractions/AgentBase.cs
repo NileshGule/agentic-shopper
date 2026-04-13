@@ -98,6 +98,14 @@ public abstract class AgentBase
     }
 
     /// <summary>
+    /// Convenience alias for ExecuteAsync.
+    /// </summary>
+    public Task<AgentResult<TOutput>> Execute<TInput, TOutput>(
+        TInput input,
+        CancellationToken cancellationToken = default)
+        => ExecuteAsync<TInput, TOutput>(input, cancellationToken);
+
+    /// <summary>
     /// Override this method to implement the agent's core execution logic.
     /// </summary>
     protected abstract Task<AgentResult<TOutput>> OnExecuteAsync<TInput, TOutput>(

@@ -3,22 +3,27 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
 
 # Copy solution and project files
-COPY ["backend/AgenticShopper.sln", "backend/"]
-COPY ["backend/src/AgenticShopper.Coordinator/AgenticShopper.Coordinator.csproj", "backend/src/AgenticShopper.Coordinator/"]
-COPY ["backend/src/AgenticShopper.Core/AgenticShopper.Core.csproj", "backend/src/AgenticShopper.Core/"]
-COPY ["backend/src/AgenticShopper.Data/AgenticShopper.Data.csproj", "backend/src/AgenticShopper.Data/"]
-COPY ["backend/src/AgenticShopper.Agents.Receipt/AgenticShopper.Agents.Receipt.csproj", "backend/src/AgenticShopper.Agents.Receipt/"]
+COPY ["AgenticShopper.sln", "./"]
+COPY ["src/AgenticShopper.Coordinator/AgenticShopper.Coordinator.csproj", "src/AgenticShopper.Coordinator/"]
+COPY ["src/AgenticShopper.Core/AgenticShopper.Core.csproj", "src/AgenticShopper.Core/"]
+COPY ["src/AgenticShopper.Data/AgenticShopper.Data.csproj", "src/AgenticShopper.Data/"]
+COPY ["src/AgenticShopper.Agents.Receipt/AgenticShopper.Agents.Receipt.csproj", "src/AgenticShopper.Agents.Receipt/"]
+COPY ["src/AgenticShopper.Agents.Categorization/AgenticShopper.Agents.Categorization.csproj", "src/AgenticShopper.Agents.Categorization/"]
+COPY ["src/AgenticShopper.Agents.Frequency/AgenticShopper.Agents.Frequency.csproj", "src/AgenticShopper.Agents.Frequency/"]
+COPY ["src/AgenticShopper.Agents.Budget/AgenticShopper.Agents.Budget.csproj", "src/AgenticShopper.Agents.Budget/"]
+COPY ["src/AgenticShopper.Agents.ListGenerator/AgenticShopper.Agents.ListGenerator.csproj", "src/AgenticShopper.Agents.ListGenerator/"]
+COPY ["src/AgenticShopper.Agents.PriceComparison/AgenticShopper.Agents.PriceComparison.csproj", "src/AgenticShopper.Agents.PriceComparison/"]
 
 # Restore dependencies
-RUN dotnet restore "backend/src/AgenticShopper.Coordinator/AgenticShopper.Coordinator.csproj"
+RUN dotnet restore "src/AgenticShopper.Coordinator/AgenticShopper.Coordinator.csproj"
 
 # Copy all source code
-COPY backend/ backend/
+COPY . .
 
 # Build and publish
-WORKDIR "/src/backend/src/AgenticShopper.Coordinator"
+WORKDIR "/src/src/AgenticShopper.Coordinator"
 RUN dotnet build "AgenticShopper.Coordinator.csproj" -c Release -o /app/build
-RUN dotnet publish "AgenticShopper.Coordinator.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AgenticShopper.Coordinator.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:ErrorOnDuplicatePublishOutputFiles=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime

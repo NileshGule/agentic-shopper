@@ -24,6 +24,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Budget> Budgets { get; set; }
     public DbSet<Promotion> Promotions { get; set; }
     public DbSet<Store> Stores { get; set; }
+    public DbSet<ProductFrequency> ProductFrequencies { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -54,6 +55,12 @@ public class ApplicationDbContext : DbContext
             .IsUnique();
 
         // Configure Receipt relationships
+        modelBuilder.Entity<Receipt>()
+            .HasOne(r => r.UploadedByUser)
+            .WithMany()
+            .HasForeignKey(r => r.UploadedBy)
+            .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<Receipt>()
             .HasMany(r => r.Purchases)
             .WithOne(p => p.Receipt)

@@ -1,0 +1,119 @@
+version: '3.8'
+
+# Unified Docker Compose for local development
+# Usage: docker compose -f docker-compose.local.yml up --build
+services:
+
+  # ─── Infrastructure ────────────────────────────────────────
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: agentic-shopper-postgres
+    environment:
+      POSTGRES_DB: agentic_shopper
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: agentic-shopper-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app-net
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: agentic-shopper-azurite
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0"
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - azurite_data:/data
+    networks:
+      - app-net
+
+  # ─── Backend ────────────────────────────────────────────────
+
+  coordinator:
+    build:
+      context: ./backend
+      dockerfile: deployment/docker/Dockerfile.coordinator
+    image: agentic-shopper-coordinator:latest
+    container_name: agentic-shopper-coordinator
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=agentic_shopper;Username=postgres;Password=postgres;Port=5432
+      - Redis__ConnectionString=redis:6379
+      - "Redis__InstanceName=AgenticShopper:"
+      - AzureStorage__ConnectionString=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+      - AzureStorage__ContainerName=receipts
+      - Cors__AllowedOrigins__0=http://localhost:3000
+      - Cors__AllowedOrigins__1=http://localhost:5173
+      - JwtSettings__SecretKey=DockerDevSecretKeyThatIsAtLeast32CharactersLong!
+      - JwtSettings__Issuer=AgenticShopper
+      - JwtSettings__Audience=AgenticShopperUsers
+    ports:
+      - "5050:80"
+    networks:
+      - app-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ─── Frontend ───────────────────────────────────────────────
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: agentic-shopper-frontend:latest
+    container_name: agentic-shopper-frontend
+    depends_on:
+      coordinator:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+    networks:
+      - app-net
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  azurite_data:
+
+networks:
+  app-net:
+    driver: bridge

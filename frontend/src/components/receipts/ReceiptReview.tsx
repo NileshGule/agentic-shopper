@@ -48,13 +48,13 @@ const ReceiptReview: React.FC<ReceiptReviewProps> = ({
       setReceipt(data);
 
       // Initialize editable fields
-      setStoreName(data.storeName);
+      setStoreName(data.storeName ?? '');
       setPurchaseDate(data.purchaseDate.split('T')[0]); // Format to YYYY-MM-DD
       setTotalAmount(data.totalAmount.toString());
       setPurchases(
         data.purchases.map((p) => ({
           id: p.id,
-          productName: p.productName,
+          productName: p.productName ?? '',
           quantity: p.quantity,
           unitPrice: p.unitPrice,
           totalPrice: p.totalPrice,

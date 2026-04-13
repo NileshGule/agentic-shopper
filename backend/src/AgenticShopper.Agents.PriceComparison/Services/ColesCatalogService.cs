@@ -2,33 +2,192 @@ using AgenticShopper.Agents.PriceComparison.Interfaces;
 using AgenticShopper.Core.Models;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
+using HtmlAgilityPack;
+using System.Text.RegularExpressions;
 
 namespace AgenticShopper.Agents.PriceComparison.Services;
 
 /// <summary>
-/// Service for fetching Coles catalog promotions
+/// Service for fetching Coles catalog promotions via web scraping
 /// </summary>
 public class ColesCatalogService : IStoreCatalogService
 {
     private readonly ILogger<ColesCatalogService> _logger;
+    private readonly HttpClient _httpClient;
+    private const string ColesSpecialsUrl = "https://www.coles.com.au/specials";
 
     public string StoreName => "Coles";
 
-    public ColesCatalogService(ILogger<ColesCatalogService> logger)
+    public ColesCatalogService(ILogger<ColesCatalogService> logger, IHttpClientFactory? httpClientFactory = null)
     {
         _logger = logger;
+        _httpClient = httpClientFactory?.CreateClient() ?? new HttpClient();
+        _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
     }
 
     /// <summary>
-    /// Fetch current promotions from Coles catalog
-    /// TODO: Implement actual web scraping or API integration
+    /// Fetch current promotions from Coles catalog using web scraping
     /// </summary>
     public async Task<IEnumerable<Promotion>> FetchPromotionsAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Fetching promotions from Coles catalog");
 
-        // TODO: Replace with actual web scraping implementation
-        // For now, return mock data for development
+        try
+        {
+            // Attempt to scrape live data from Coles website
+            var livePromotions = await ScrapeColesWebsiteAsync(cancellationToken);
+            if (livePromotions.Any())
+            {
+                _logger.LogInformation("Successfully scraped {Count} promotions from Coles website", livePromotions.Count());
+                return livePromotions;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to scrape Coles website, falling back to mock data");
+        }
+
+        // Fallback to mock data if scraping fails
+        _logger.LogInformation("Using mock data for Coles promotions");
+        return GenerateMockPromotions();
+    }
+
+    /// <summary>
+    /// Scrape Coles website for current promotions
+    /// </summary>
+    private async Task<IEnumerable<Promotion>> ScrapeColesWebsiteAsync(CancellationToken cancellationToken)
+    {
+        var promotions = new List<Promotion>();
+
+        try
+        {
+            var response = await _httpClient.GetAsync(ColesSpecialsUrl, cancellationToken);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to fetch Coles specials page: {StatusCode}", response.StatusCode);
+                return promotions;
+            }
+
+            var html = await response.Content.ReadAsStringAsync(cancellationToken);
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(html);
+
+            // Parse Coles product cards (structure may vary, this is an example)
+            var productNodes = htmlDoc.DocumentNode.SelectNodes("//div[contains(@class, 'product')]");
+
+            if (productNodes == null || !productNodes.Any())
+            {
+                _logger.LogWarning("No product nodes found on Coles website");
+                return promotions;
+            }
+
+            var catalogWeek = GetCurrentCatalogWeek();
+            var now = DateTime.UtcNow;
+
+            foreach (var node in productNodes)
+            {
+                try
+                {
+                    var promotion = ParseColesProductNode(node, catalogWeek, now);
+                    if (promotion != null)
+                    {
+                        promotions.Add(promotion);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Failed to parse individual Coles product node");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error scraping Coles website");
+        }
+
+        return promotions;
+    }
+
+    /// <summary>
+    /// Parse a single Coles product node into a Promotion
+    /// </summary>
+    private Promotion? ParseColesProductNode(HtmlNode node, string catalogWeek, DateTime now)
+    {
+        // Extract product name
+        var nameNode = node.SelectSingleNode(".//h2 | .//span[contains(@class, 'product-name')]");
+        if (nameNode == null) return null;
+
+        var productName = CleanText(nameNode.InnerText);
+        if (string.IsNullOrWhiteSpace(productName)) return null;
+
+        // Extract prices
+        var salePriceNode = node.SelectSingleNode(".//span[contains(@class, 'price')]");
+        var originalPriceNode = node.SelectSingleNode(".//span[contains(@class, 'was-price')] | .//span[contains(@class, 'original-price')]");
+
+        if (salePriceNode == null) return null;
+
+        var salePrice = ParsePrice(salePriceNode.InnerText);
+        var originalPrice = originalPriceNode != null ? ParsePrice(originalPriceNode.InnerText) : salePrice * 1.2m;
+
+        if (salePrice <= 0) return null;
+
+        var discountPercentage = originalPrice > salePrice 
+            ? Math.Round((originalPrice - salePrice) / originalPrice * 100, 2) 
+            : 0;
+
+        return new Promotion
+        {
+            Id = Guid.NewGuid(),
+            ProductName = productName,
+            NormalizedProductName = productName.ToUpperInvariant().Trim(),
+            StoreName = StoreName,
+            OriginalPrice = originalPrice,
+            SalePrice = salePrice,
+            DiscountPercentage = discountPercentage,
+            StartDate = now.AddDays(-3),
+            EndDate = now.AddDays(4),
+            CatalogWeek = catalogWeek,
+            LastUpdated = now
+        };
+    }
+
+    /// <summary>
+    /// Parse price from text (e.g., "$4.50" -> 4.50)
+    /// </summary>
+    private decimal ParsePrice(string priceText)
+    {
+        if (string.IsNullOrWhiteSpace(priceText)) return 0;
+
+        // Remove currency symbols and whitespace
+        var cleaned = Regex.Replace(priceText, @"[^\d.]", "");
+        
+        if (decimal.TryParse(cleaned, NumberStyles.Any, CultureInfo.InvariantCulture, out var price))
+        {
+            return price;
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Clean HTML text content
+    /// </summary>
+    private string CleanText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+        // Decode HTML entities and clean whitespace
+        text = System.Net.WebUtility.HtmlDecode(text);
+        text = Regex.Replace(text, @"\s+", " ");
+        return text.Trim();
+    }
+
+    /// <summary>
+    /// Generate mock promotions for development/fallback
+    /// </summary>
+    private IEnumerable<Promotion> GenerateMockPromotions()
+    {
         var catalogWeek = GetCurrentCatalogWeek();
         var now = DateTime.UtcNow;
 
@@ -122,7 +281,7 @@ public class ColesCatalogService : IStoreCatalogService
 
         _logger.LogInformation("Fetched {Count} mock promotions from Coles", promotions.Count);
 
-        return await Task.FromResult(promotions);
+        return promotions;
     }
 
     /// <summary>

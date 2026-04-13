@@ -196,9 +196,9 @@
 - [X] T113 [US4] Implement IStoreCatalogService interface in backend/src/AgenticShopper.Agents.PriceComparison/Interfaces/IStoreCatalogService.cs
 - [X] T114 [US4] Implement PriceOptimizer for savings calculation in backend/src/AgenticShopper.Agents.PriceComparison/Services/PriceOptimizer.cs
 - [X] T115 [US4] Create PriceController with promotions/compare endpoints in backend/src/AgenticShopper.Agents.PriceComparison/Controllers/PriceController.cs
-- [ ] T116 [US4] Implement web scraping logic for Coles catalog in ColesCatalogService
-- [ ] T117 [US4] Implement web scraping logic for Woolworths catalog in WoolworthsCatalogService
-- [ ] T118 [US4] Add Redis caching for promotion data (7-day TTL) in catalog services
+- [X] T116 [US4] Implement web scraping logic for Coles catalog in ColesCatalogService
+- [X] T117 [US4] Implement web scraping logic for Woolworths catalog in WoolworthsCatalogService
+- [X] T118 [US4] Add Redis caching for promotion data (7-day TTL) in catalog services
 - [X] T119 [US4] Implement weekly promotion refresh background job (IHostedService) in backend/src/AgenticShopper.Agents.PriceComparison/Jobs/PromotionRefreshJob.cs
 - [X] T120 [US4] Implement product name fuzzy matching for promotions in PriceAgent
 - [X] T121 [US4] Add optimal shopping strategy calculation (FR-026) in PriceOptimizer
@@ -322,7 +322,7 @@
 - [X] T191 [P] Setup Azure Container Apps Bicep templates in backend/deployment/azure/
 - [X] T192 [P] Create CI/CD pipeline in .github/workflows/ci-backend.yml
 - [X] T193 [P] Create CI/CD pipeline in .github/workflows/ci-frontend.yml
-- [ ] T194 Update README.md with feature overview and quickstart
+- [X] T194 Update README.md with feature overview and quickstart
 - [ ] T195 Run quickstart.md validation (Docker Compose up, verify all services)
 - [X] T196 [P] Add API rate limiting for external-facing endpoints
 - [ ] T197 [P] Implement request validation with FluentValidation

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SpendingDashboard } from '../components/analytics/SpendingDashboard';
 import { BudgetTracker } from '../components/analytics/BudgetTracker';
+import { DEMO_FAMILY_ID } from '../constants/demo';
 import './AnalyticsPage.css';
 
 interface Category {
@@ -13,7 +14,7 @@ interface Category {
  */
 export default function AnalyticsPage() {
   // TODO: Get familyId from auth context
-  const [familyId] = useState('00000000-0000-0000-0000-000000000001');
+  const [familyId] = useState(DEMO_FAMILY_ID);
   const [categories, setCategories] = useState<Category[]>([]);
   const [alertCount, setAlertCount] = useState(0);
   const [view, setView] = useState<'dashboard' | 'budgets' | 'both'>('both');
