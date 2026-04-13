@@ -81,13 +81,18 @@ public class ReceiptAgent : AgentBase
                 ocrResult.LineItems.Count);
 
             // Step 3: Create receipt entity
+            var purchaseDate = ocrResult.PurchaseDate ?? DateTime.UtcNow;
+            // Ensure the date is UTC (Npgsql requires DateTimeKind.Utc for timestamptz columns)
+            if (purchaseDate.Kind != DateTimeKind.Utc)
+                purchaseDate = DateTime.SpecifyKind(purchaseDate, DateTimeKind.Utc);
+
             var receipt = new Core.Models.Receipt
             {
                 Id = Guid.NewGuid(),
                 FamilyId = request.FamilyId,
                 UploadedBy = request.UploadedBy,
                 StoreName = ocrResult.StoreName ?? "Unknown Store",
-                PurchaseDate = ocrResult.PurchaseDate ?? DateTime.UtcNow,
+                PurchaseDate = purchaseDate,
                 TotalAmount = ocrResult.TotalAmount ?? 0,
                 ImageUrl = imageUrl,
                 ConfidenceScore = ocrResult.ConfidenceScore,
@@ -99,138 +104,110 @@ public class ReceiptAgent : AgentBase
             var purchases = new List<Purchase>();
             foreach (var lineItem in ocrResult.LineItems)
             {
+                // T080 [FR-010]: Find existing product or create a new one
                 var product = await GetOrCreateProductAsync(
-                    lineItem.ProductName,
-                    request.FamilyId,
-                    request.UploadedBy,
-                    cancellationToken);
+                    createdBy: request.UploadedBy,
+                    productName: lineItem.ProductName,
+                    cancellationToken: cancellationToken);
 
                 var purchase = new Purchase
                 {
                     Id = Guid.NewGuid(),
                     ReceiptId = receipt.Id,
                     ProductId = product.Id,
+                    Product = product,
                     Quantity = lineItem.Quantity,
                     UnitPrice = lineItem.UnitPrice,
                     TotalPrice = lineItem.TotalPrice,
                     PurchaseDate = receipt.PurchaseDate
                 };
-
                 purchases.Add(purchase);
-                receipt.Purchases.Add(purchase);
-
-                Logger.LogDebug(
-                    "Created purchase: {ProductName} x {Quantity} @ ${UnitPrice}",
-                    product.Name,
-                    purchase.Quantity,
-                    purchase.UnitPrice);
             }
 
-            // Step 5: Save receipt to database
+            receipt.Purchases = purchases;
+
+            // Step 5: Save receipt and all related entities to the database
             await _receiptRepository.AddAsync(receipt, cancellationToken);
 
             Logger.LogInformation(
-                "Receipt {ReceiptId} created successfully with {PurchaseCount} purchases, status: {Status}",
+                "Successfully created receipt {ReceiptId} with {PurchaseCount} purchases",
                 receipt.Id,
-                purchases.Count,
-                receipt.Status);
+                receipt.Purchases.Count);
 
-            // Step 6: Use LLM to improve OCR results if confidence is low
-            if (receipt.Status == ReceiptStatus.NeedsReview)
-            {
-                Logger.LogInformation("Receipt has low confidence, may need LLM enhancement");
-                // TODO: Implement LLM-based OCR enhancement
-                // var enhancedResult = await EnhanceWithLlmAsync(ocrResult, cancellationToken);
-            }
-
+            // Step 6: Prepare the result
             var result = new ReceiptProcessingResult
             {
                 ReceiptId = receipt.Id,
                 StoreName = receipt.StoreName,
                 PurchaseDate = receipt.PurchaseDate,
                 TotalAmount = receipt.TotalAmount,
-                ItemCount = purchases.Count,
+                ItemCount = receipt.Purchases.Count,
                 ConfidenceScore = receipt.ConfidenceScore,
                 Status = receipt.Status.ToString(),
                 NeedsReview = receipt.Status == ReceiptStatus.NeedsReview
             };
 
-            return AgentResult<TOutput>.Success(
-                (TOutput)(object)result,
-                new Dictionary<string, object>
-                {
-                    { "ocrProvider", ocrResult.ProviderName ?? "Unknown" },
-                    { "processingTime", DateTime.UtcNow }
-                });
+            return AgentResult<TOutput>.Success((TOutput)(object)result);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to process receipt");
-            return AgentResult<TOutput>.Failure($"Receipt processing failed: {ex.Message}", ex);
+            Logger.LogError(ex, "An unexpected error occurred during receipt processing.");
+            return AgentResult<TOutput>.Failure($"An unexpected error occurred: {ex.Message}");
         }
     }
 
-    private async Task<Product> GetOrCreateProductAsync(
-        string productName,
-        Guid familyId,
-        Guid userId,
-        CancellationToken cancellationToken)
+    /// <summary>
+    /// Determines the status of the receipt based on the OCR confidence score.
+    /// </summary>
+    private static ReceiptStatus DetermineReceiptStatus(double confidenceScore)
     {
-        var normalizedName = NormalizeProductName(productName);
+        return confidenceScore switch
+        {
+            >= 0.9 => ReceiptStatus.Verified,
+            >= 0.7 => ReceiptStatus.NeedsReview,
+            _ => ReceiptStatus.Pending
+        };
+    }
 
-        // Try to find existing product by normalized name
+    /// <summary>
+    /// Finds a product by name for a given user or creates a new one if it doesn't exist.
+    /// </summary>
+    private async Task<Product> GetOrCreateProductAsync(Guid createdBy, string productName, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(productName))
+        {
+            productName = "Unknown Product";
+        }
+
+        // Normalize product name for better matching
+        var normalizedProductName = productName.Trim().ToLower();
+
+        // T081 [FR-011]: Search for an existing product (case-insensitive)
         var existingProducts = await _productRepository.FindAsync(
-            p => p.NormalizedName == normalizedName,
+            p => p.CreatedBy == createdBy && p.NormalizedName == normalizedProductName,
             cancellationToken);
 
         var existingProduct = existingProducts.FirstOrDefault();
+
         if (existingProduct != null)
         {
-            Logger.LogDebug("Found existing product: {ProductName}", existingProduct.Name);
+            Logger.LogDebug("Found existing product '{ProductName}' with ID {ProductId}", existingProduct.Name, existingProduct.Id);
             return existingProduct;
         }
 
-        // Create new product
+        // T082 [FR-012]: Create a new product if not found
+        Logger.LogInformation("Creating new product '{ProductName}' for user {CreatedBy}", productName, createdBy);
         var newProduct = new Product
         {
             Id = Guid.NewGuid(),
             Name = productName,
-            NormalizedName = normalizedName,
-            CategoryId = null, // Will be assigned by categorization agent
-            Frequency = PurchaseFrequency.Unknown,
-            CreatedBy = userId,
+            NormalizedName = normalizedProductName,
+            CreatedBy = createdBy,
             CreatedDate = DateTime.UtcNow
         };
 
-        await _productRepository.AddAsync(newProduct, cancellationToken);
-
-        Logger.LogInformation("Created new product: {ProductName}", productName);
+        // Note: We don't save the product here. It will be saved as part of the receipt graph.
         return newProduct;
-    }
-
-    private string NormalizeProductName(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            return string.Empty;
-
-        // Remove extra whitespace, convert to lowercase, trim
-        return System.Text.RegularExpressions.Regex.Replace(name, @"\s+", " ")
-            .Trim()
-            .ToLowerInvariant();
-    }
-
-    private ReceiptStatus DetermineReceiptStatus(double confidenceScore)
-    {
-        // Receipts with confidence > 85% are auto-verified
-        if (confidenceScore >= 0.85)
-            return ReceiptStatus.Verified;
-
-        // Receipts with confidence < 70% need manual review
-        if (confidenceScore < 0.70)
-            return ReceiptStatus.NeedsReview;
-
-        // Receipts with confidence 70-85% are pending verification
-        return ReceiptStatus.Pending;
     }
 
     protected override Task OnInitializeAsync(CancellationToken cancellationToken)

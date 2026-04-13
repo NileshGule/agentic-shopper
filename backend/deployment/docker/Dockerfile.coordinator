@@ -29,11 +29,16 @@ RUN dotnet publish "AgenticShopper.Coordinator.csproj" -c Release -o /app/publis
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# Install curl for healthcheck, tesseract-ocr for offline receipt processing,
+# and poppler-utils (pdftoppm) for PDF-to-image conversion
+RUN apk add --no-cache curl tesseract-ocr tesseract-ocr-data-eng poppler-utils
 
 # Copy published application
 COPY --from=build /app/publish .
+
+# Ensure tessdata directory exists and has the language data
+RUN mkdir -p /app/tessdata && \
+    cp /usr/share/tessdata/eng.traineddata /app/tessdata/ 2>/dev/null || true
 
 # Create non-root user
 RUN addgroup -g 1000 appuser && adduser -u 1000 -G appuser -s /bin/sh -D appuser

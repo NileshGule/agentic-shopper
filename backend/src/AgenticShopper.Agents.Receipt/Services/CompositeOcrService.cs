@@ -27,52 +27,32 @@ public class CompositeOcrService : IOcrService
         _ocrServices = new List<IOcrService>();
 
         var preferredProvider = _configuration["OCR:PreferredProvider"];
-        var usePaddleOCR = _configuration.GetValue<bool>("AzureDocumentIntelligence:UsePaddleOCR");
 
         // Add Azure Document Intelligence if configured
         var azureEndpoint = _configuration["AzureDocumentIntelligence:Endpoint"];
         var azureKey = _configuration["AzureDocumentIntelligence:ApiKey"];
 
-        // In development, prefer PaddleOCR to save costs
-        if (preferredProvider == "PaddleOCR" || usePaddleOCR)
+        if (!string.IsNullOrEmpty(azureEndpoint) && !string.IsNullOrEmpty(azureKey)
+            && preferredProvider != "Tesseract")
         {
-            _logger.LogInformation("Development mode: Using PaddleOCR as primary provider for cost savings");
-            
-            // Add PaddleOCR first
-            _ocrServices.Add(new PaddleOcrService(
-                logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<PaddleOcrService>(),
+            _ocrServices.Add(new AzureDocumentIntelligenceOcrService(
+                logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<AzureDocumentIntelligenceOcrService>(),
                 configuration: _configuration));
-            _logger.LogInformation("PaddleOCR provider configured as primary");
-
-            // Add Azure as fallback if configured
-            if (!string.IsNullOrEmpty(azureEndpoint) && !string.IsNullOrEmpty(azureKey))
-            {
-                _ocrServices.Add(new AzureDocumentIntelligenceOcrService(
-                    logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<AzureDocumentIntelligenceOcrService>(),
-                    configuration: _configuration));
-                _logger.LogInformation("Azure Document Intelligence OCR provider configured as fallback");
-            }
+            _logger.LogInformation("Azure Document Intelligence OCR provider configured");
         }
-        else
-        {
-            // Production mode: Use Azure first
-            if (!string.IsNullOrEmpty(azureEndpoint) && !string.IsNullOrEmpty(azureKey))
-            {
-                _ocrServices.Add(new AzureDocumentIntelligenceOcrService(
-                    logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<AzureDocumentIntelligenceOcrService>(),
-                    configuration: _configuration));
-                _logger.LogInformation("Azure Document Intelligence OCR provider configured as primary");
-            }
-            else
-            {
-                _logger.LogWarning("Azure Document Intelligence not configured, will use PaddleOCR only");
-            }
 
-            // Always add PaddleOCR as fallback
-            _ocrServices.Add(new PaddleOcrService(
-                logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<PaddleOcrService>(),
-                configuration: _configuration));
-            _logger.LogInformation("PaddleOCR provider configured as fallback");
+        // Always add Tesseract as the local / offline provider
+        _ocrServices.Add(new TesseractOcrService(
+            logger: LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<TesseractOcrService>()));
+        _logger.LogInformation("Tesseract (offline) OCR provider configured");
+
+        // If Tesseract is the preferred provider, move it to the front
+        if (preferredProvider == "Tesseract")
+        {
+            _logger.LogInformation("Tesseract is the preferred OCR provider");
+            var tesseract = _ocrServices.Last();
+            _ocrServices.Remove(tesseract);
+            _ocrServices.Insert(0, tesseract);
         }
     }
 

@@ -294,3 +294,6 @@ yarn-error.log*
 # Agent specific
 models/
 .foundry/
+
+# Ignore the samples directory
+samples/
